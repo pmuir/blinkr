@@ -1,6 +1,6 @@
 require "bundler/gem_tasks"
 
-GEMFILE = "aweplug-#{Aweplug::VERSION}.gem"
+GEMFILE = "aweplug-#{Blinkr::VERSION}.gem"
 
 desc "Run all tests and build the gem"
 task :build => 'test:spec' do
@@ -13,9 +13,9 @@ namespace :release do
     system "gem push #{GEMFILE}"
   end
 
-  desc "Create tag #{Aweplug::VERSION} in git"
+  desc "Create tag #{Blinkr::VERSION} in git"
   task :tag do
-    system "git tag #{Aweplug::VERSION}"
+    system "git tag #{Blinkr::VERSION}"
   end
 end
 
