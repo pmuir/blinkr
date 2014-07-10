@@ -1,6 +1,6 @@
 require "bundler/gem_tasks"
 
-GEMFILE = "aweplug-#{Blinkr::VERSION}.gem"
+GEMFILE = "blinkr-#{Blinkr::VERSION}.gem"
 
 desc "Run all tests and build the gem"
 task :build do
