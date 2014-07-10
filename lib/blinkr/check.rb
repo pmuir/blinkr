@@ -70,7 +70,7 @@ module Blinkr
           )
           perform request do |resp|
             unless resp.success?
-              @errors[request] ||= OpenStruct.new({ :url => url, :code => resp.code, :message => resp.return_message, :refs => [] })
+              @errors[request] ||= OpenStruct.new({ :url => url, :code => resp.code.to_i, :message => resp.return_message, :refs => [] })
               @errors[request].refs << OpenStruct.new({:src => src, :line_no => attr.line, :snippet => attr.parent.to_s})
             end
           end
