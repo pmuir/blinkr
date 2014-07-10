@@ -85,7 +85,7 @@ module Blinkr
             if limit > 0
               perform(Typhoeus::Request.new(req.base_url, req.options), limit - 1, &Proc.new)
             else
-              yield OpenStruct.new({:success => false, :code => 0, :return_message => "Unable to connect to #{req.base_url} after #{@max_retrys} attempts"})
+              yield OpenStruct.new({:success => false, :code => '0', :return_message => "Server timed out"})
             end
           else
             yield resp

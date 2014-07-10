@@ -16,7 +16,8 @@ body
             | #{req.base_url} 
             i.glyphicon.glyphicon-new-window
           .pull-right.badge
-            | #{err.code} #{err.message}
+            = err.code if err.code != '0'
+            = err.message
         ul.list-group
           - err.refs.each do |ref|
             li.list-group-item
