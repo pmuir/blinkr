@@ -1,0 +1,27 @@
+doctype html 
+head
+  link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
+  meta name="viewport" content="width=device-width, initial-scale=1"
+  title Blinkr
+body
+
+  .container
+    h1 Blinkr
+    p.lead 
+      | Detected broken links
+    - errors.each do |req, err|
+      .panel.panel-danger
+        .panel-heading
+          a href="#{req.base_url}" target='_blank'
+            | #{req.base_url} 
+            i.glyphicon.glyphicon-new-window
+          .pull-right.badge
+            | #{err.code} #{err.message}
+        ul.list-group
+          - err.refs.each do |ref|
+            li.list-group-item
+              a href="view-source:#{ref.src}" target='_blank'
+                | #{ref.src} (line #{ref.line_no}) 
+                i.glyphicon.glyphicon-new-window
+              pre #{ref.snippet}
+
