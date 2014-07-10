@@ -3,8 +3,8 @@ require "bundler/gem_tasks"
 GEMFILE = "aweplug-#{Blinkr::VERSION}.gem"
 
 desc "Run all tests and build the gem"
-task :build => 'test:spec' do
-  system "gem build aweplug.gemspec"
+task :build do
+  system "gem build blinkr.gemspec"
 end
 
 namespace :release do
