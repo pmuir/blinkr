@@ -14,7 +14,7 @@ module Blinkr
       else
         @sitemap = URI.join(base_url, 'sitemap.xml').to_s
       end
-      @skips = skips
+      @skips = skips || []
       @base_url = base_url
       @max_retrys = max_retrys || 3
       @max_page_retrys = max_page_retrys || @max_retrys
@@ -31,20 +31,18 @@ module Blinkr
         sitemap = Nokogiri::XML(File.open(@sitemap))
       end
       sitemap.css('loc').each do |loc|
-        if @skips.nil? || @skips.none? { |regex| regex.match(loc.content) }
-          request = Typhoeus::Request.new(
-            loc.content,
-            method: :get,
-            followlocation: true
-          )
-          perform(request, @max_page_retrys) do |resp|
-            page = Nokogiri::HTML(resp.body)
-            page.css('a[href]').each do |a|
-              check_attr(a.attribute('href'), loc.content)
-            end
-            page.css('img[src]').each do |img|
-              check_attr(img.attribute('src'), loc.content)
-            end
+        request = Typhoeus::Request.new(
+          loc.content,
+          method: :get,
+          followlocation: true
+        )
+        perform(request, @max_page_retrys) do |resp|
+          page = Nokogiri::HTML(resp.body)
+          page.css('a[href]').each do |a|
+            check_attr(a.attribute('href'), loc.content)
+          end
+          page.css('img[src]').each do |img|
+            check_attr(img.attribute('src'), loc.content)
           end
         end
       end
@@ -53,10 +51,6 @@ module Blinkr
     end
 
     private
-
-    def add_error request, src, line_no, snippet, url, code, message
-      
-    end
 
     def check_attr attr, src
       url = attr.value
@@ -85,20 +79,21 @@ module Blinkr
     end
 
     def perform req, limit = @max_retrys
-      req.on_complete do |resp|
-        if resp.timed_out?
-          if limit > 0
-            perform(Typhoeus::Request.new(req.base_url, req.options), limit - 1, &Proc.new)
+      if @skips.none? { |regex| regex.match(req.base_url) }
+        req.on_complete do |resp|
+          if resp.timed_out?
+            if limit > 0
+              perform(Typhoeus::Request.new(req.base_url, req.options), limit - 1, &Proc.new)
+            else
+              yield OpenStruct.new({:success => false, :code => 0, :return_message => "Unable to connect to #{req.base_url} after #{@max_retrys} attempts"})
+            end
           else
-            yield OpenStruct.new({:success => false, :code => 0, :return_message => "Unable to connect to #{req.base_url} after #{@max_retrys} attempts"})
+            yield resp
           end
-        else
-          yield resp
         end
+        @hydra.queue req
       end
-      @hydra.queue req
     end
-
   end
 end
 
