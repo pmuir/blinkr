@@ -19,7 +19,6 @@ module Blinkr
       @max_retrys = max_retrys || 3
       @max_page_retrys = max_page_retrys || @max_retrys
       @verbose = verbose
-      Typhoeus::Config.memoize = true
       Typhoeus::Config.cache = Blinkr::Cache.new
       @hydra = Typhoeus::Hydra.new(max_concurrency: 200)
     end
