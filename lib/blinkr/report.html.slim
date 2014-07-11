@@ -11,7 +11,7 @@ body
   .container
     h1 Blinkr
     p.lead 
-      | Detected broken links
+      | Detecting broken links
     - errors.each do |req, err|
       .panel.panel-danger
         .panel-heading
@@ -41,4 +41,8 @@ body
           $('##{err.uid}').on('hide.bs.collapse', function () {
             $('a#control-#{err.uid}').html('<i class="fa fa-plus-square"></i>');
           });
+    - if errors.empty?
+      .panel.panel-success
+        .panel-heading
+          | No broken links detected
 
