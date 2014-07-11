@@ -22,7 +22,7 @@ body
             | #{url} 
             i.fa.fa-external-link
           .pull-right.badge
-            | #{err.code if err.code > 0} #{err.status_message unless err.status_message.nil?}
+            | #{err.code} #{err.status_message unless err.status_message.nil?}
         .panel-body.collapse id="#{err.uid}"
           - unless err.return_message.nil? || err.return_message == 'No error'
             |Message: #{err.return_message}

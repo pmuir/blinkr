@@ -32,12 +32,7 @@ module Blinkr
         sitemap = Nokogiri::XML(File.open(@sitemap))
       end
       sitemap.css('loc').each do |loc|
-        request = Typhoeus::Request.new(
-          loc.content,
-          method: :get,
-          followlocation: true
-        )
-        perform(request, @max_page_retrys) do |resp|
+        perform(get(loc.content), @max_page_retrys) do |resp|
           page = Nokogiri::HTML(resp.body)
           page.css('a[href]').each do |a|
             check_attr(a.attribute('href'), loc.content)
@@ -52,7 +47,7 @@ module Blinkr
     end
 
     def single url
-      perform(head(url)) do |resp|
+      perform(get(url)) do |resp|
         puts "\n++++++++++"
         puts "+ Blinkr +"
         puts "++++++++++"
@@ -93,7 +88,7 @@ module Blinkr
         rescue Exception => e
         end
         if uri.nil? || uri.is_a?(URI::HTTP)
-          perform(head(url)) do |resp|
+          perform(get(url)) do |resp|
             unless resp.success?
               @errors[url] ||= OpenStruct.new({ :url => url, :code => resp.code.to_i, :status_message => resp.status_message, :return_message => resp.return_message, :refs => [], :uid => url.gsub(/:|\/|\.|\?|#/, '_') })
               @errors[url].refs << OpenStruct.new({:src => src, :line_no => attr.line, :snippet => attr.parent.to_s})
@@ -103,10 +98,9 @@ module Blinkr
       end
     end
 
-    def head url
+    def get url
       Typhoeus::Request.new(
         url,
-        method: :head,
         followlocation: true,
         verbose: @verbose
       )
