@@ -22,9 +22,12 @@ body
             | #{url} 
             i.fa.fa-external-link
           .pull-right.badge
-            | #{err.code} #{err.status_message unless err.status_message.nil?}
+            - if err.code > 0 || !err.status_message.nil?
+              ' #{err.code} #{err.status_message}
+            - elsif !err.return_message.nil? && err.return_message != 'No error'
+              ' #{err.return_message}
         .panel-body.collapse id="#{err.uid}"
-          - unless err.return_message.nil? || err.return_message == 'No error'
+          - unless err.return_message.nil? || err.return_message == 'No error' || (err.code == 0 && err.status_message.nil?)
             |Message: #{err.return_message}
           ul.list-group
           - err.refs.each do |ref|
