@@ -57,7 +57,7 @@ module Blinkr
       unless url.nil?
         begin
           uri = URI(url)
-          uri = URI.join(src, url) if uri.path.nil? || uri.path.empty?
+          uri = URI.join(src, url) if uri.path.nil? || uri.path.empty? || uri.path.relative?
           uri = URI.join(@base_url, uri) if uri.scheme.nil?
           url = uri.to_s
         rescue Exception => e
