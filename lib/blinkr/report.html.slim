@@ -16,7 +16,7 @@ body
       .panel.panel-danger
         .panel-heading
           a data-toggle="collapse" href="##{err.uid}" id="control-#{err.uid}"
-            i.fa.fa-plus-square
+            i.fa.fa-caret-square-o-right
           '
           a href="#{req.base_url}" target='_blank'
             | #{req.base_url} 
@@ -36,10 +36,10 @@ body
               pre #{ref.snippet}
         javascript:
           $('##{err.uid}').on('show.bs.collapse', function () {
-            $('a#control-#{err.uid}').html('<i class="fa fa-minus-square"></i>');
+            $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
           });
           $('##{err.uid}').on('hide.bs.collapse', function () {
-            $('a#control-#{err.uid}').html('<i class="fa fa-plus-square"></i>');
+            $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
           });
     - if errors.empty?
       .panel.panel-success
