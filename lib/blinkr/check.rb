@@ -95,8 +95,8 @@ module Blinkr
         if uri.nil? || uri.is_a?(URI::HTTP)
           perform(head(url)) do |resp|
             unless resp.success?
-              @errors[resp.request] ||= OpenStruct.new({ :url => url, :code => resp.code.to_i, :status_message => resp.status_message, :return_message => resp.return_message, :refs => [], :uid => url.gsub(/:|\/|\.|\?|#/, '_') })
-              @errors[resp.request].refs << OpenStruct.new({:src => src, :line_no => attr.line, :snippet => attr.parent.to_s})
+              @errors[url] ||= OpenStruct.new({ :url => url, :code => resp.code.to_i, :status_message => resp.status_message, :return_message => resp.return_message, :refs => [], :uid => url.gsub(/:|\/|\.|\?|#/, '_') })
+              @errors[url].refs << OpenStruct.new({:src => src, :line_no => attr.line, :snippet => attr.parent.to_s})
             end
           end
         end

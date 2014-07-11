@@ -12,14 +12,14 @@ body
     h1 Blinkr
     p.lead 
       | Detecting broken links
-    - errors.each do |req, err|
+    - errors.each do |url, err|
       .panel.panel-danger
         .panel-heading
           a data-toggle="collapse" href="##{err.uid}" id="control-#{err.uid}"
             i.fa.fa-caret-square-o-right
           '
-          a href="#{req.base_url}" target='_blank'
-            | #{req.base_url} 
+          a href="#{url}" target='_blank'
+            | #{url} 
             i.fa.fa-external-link
           .pull-right.badge
             | #{err.code if err.code > 0} #{err.status_message unless err.status_message.nil?}
