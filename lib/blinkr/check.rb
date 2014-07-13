@@ -3,11 +3,15 @@ require 'uri'
 require 'typhoeus'
 require 'blinkr/cache'
 require 'ostruct'
+require 'tempfile'
+require 'parallel'
 
 module Blinkr 
   class Check
 
-    def initialize base_url, sitemap: sitemap, skips: skips, max_retrys: max_retrys, max_page_retrys: max_page_retrys, verbose: verbose
+    SNAP_JS = File.expand_path('snap.js', File.dirname(__FILE__))
+
+    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, browser: 'typhoeus', viewport: 1200
       raise "Must specify base_url" if base_url.nil?
       unless sitemap.nil?
         @sitemap = sitemap
@@ -18,36 +22,45 @@ module Blinkr
       @base_url = base_url
       @max_retrys = max_retrys || 3
       @max_page_retrys = max_page_retrys || @max_retrys
+      @browser = browser || 'typhoeus'
       @verbose = verbose
-      Typhoeus::Config.cache = Blinkr::Cache.new
+      @viewport = viewport || 1200
+      @typhoeus_cache = Blinkr::Cache.new
+      Typhoeus::Config.cache = @typhoeus_cache
       @hydra = Typhoeus::Hydra.new(max_concurrency: 200)
+      @phantomjs_count = 0
+      @typhoeus_count = 0
     end
 
     def check
-      @errors = {}
+      @errors = OpenStruct.new({:links => {}})
+      @errors.javascript = {} if @browser == 'phantomjs'
       puts "Loading sitemap from #{@sitemap}"
       if @sitemap =~ URI::regexp
         sitemap = Nokogiri::XML(Typhoeus.get(@sitemap, followlocation: true).body)
       else
         sitemap = Nokogiri::XML(File.open(@sitemap))
       end
-      sitemap.css('loc').each do |loc|
-        perform(get(loc.content), @max_page_retrys) do |resp|
-          page = Nokogiri::HTML(resp.body)
-          page.css('a[href]').each do |a|
-            check_attr(a.attribute('href'), loc.content)
+      pages(sitemap.css('loc').collect { |loc| loc.content }) do |resp|
+        if resp.success?
+          body = Nokogiri::HTML(resp.body)
+          body.css('a[href]').each do |a|
+            check_attr(a.attribute('href'),resp.request.base_url)
           end
-          page.css('img[src]').each do |img|
-            check_attr(img.attribute('src'), loc.content)
-          end
+        else
+          puts "#{resp.code} #{resp.status_message} Unable to load page #{resp.request.base_url} #{'(' + resp.return_message + ')' unless resp.return_message.nil?}"
         end
       end
       @hydra.run
+      msg = "Checked #{@phantomjs_count + @typhoeus_count} urls."
+      msg << " Loaded #{@phantomjs_count} pages using phantomjs." if @phantomjs_count > 0
+      msg << " Fetched #{@typhoeus_cache.size} pages into typhoeus cache, for #{@typhoeus_count} requests."
+      puts msg
       @errors
     end
 
     def single url
-      perform(get(url)) do |resp|
+      typhoeus(url) do |resp|
         puts "\n++++++++++"
         puts "+ Blinkr +"
         puts "++++++++++"
@@ -88,38 +101,79 @@ module Blinkr
         rescue Exception => e
         end
         if uri.nil? || uri.is_a?(URI::HTTP)
-          perform(get(url)) do |resp|
+          typhoeus(url) do |resp|
             unless resp.success?
-              @errors[url] ||= OpenStruct.new({ :url => url, :code => resp.code.to_i, :status_message => resp.status_message, :return_message => resp.return_message, :refs => [], :uid => url.gsub(/:|\/|\.|\?|#|%|=/, '_') })
-              @errors[url].refs << OpenStruct.new({:src => src, :line_no => attr.line, :snippet => attr.parent.to_s})
+              add_error url, resp.code, resp.status_message, resp.return_message, src, "line #{attr.line}", attr.parent.to_s
             end
           end
         end
       end
     end
 
-    def get url
-      Typhoeus::Request.new(
-        url,
-        followlocation: true,
-        verbose: @verbose
-      )
+    def add_error url, code, status_message, return_message, src, src_location, snippet
+      @errors.links[url] ||= OpenStruct.new({ :code => code.nil? ? nil : code.to_i, :status_message => status_message, :return_message => return_message, :refs => [], :uid => uid(url) })
+      @errors.links[url].refs << OpenStruct.new({:src => src, :src_location => src_location, :snippet => snippet})
     end
 
-    def perform req, limit = @max_retrys
-      if @skips.none? { |regex| regex.match(req.base_url) }
+    def uid url
+       url.gsub(/:|\/|\.|\?|#|%|=|&|,|~|;|\!|@/, '_')
+    end
+
+    def pages urls
+      if @browser == 'phantomjs'
+        Parallel.each(urls, :in_threads => 8) do |url|
+          phantomjs url, @max_page_retrys, &Proc.new
+        end
+      else
+        typhoeus url, @max_page_retrys, &Proc.new
+      end
+    end
+
+    def phantomjs url, limit = @max_retrys
+      if @skips.none? { |regex| regex.match(url) }
+        Tempfile.open('blinkr') do|f|
+          if system "phantomjs #{SNAP_JS} #{url} #{@viewport} #{f.path}"
+            json = JSON.load(File.read(f.path))
+            json['resourceErrors'].each do |error|
+              add_error error['url'], error['errorCode'], error['errorString'], nil, url, 'Loading resource', nil
+            end
+            json['javascriptErrors'].each do |error|
+              @errors.javascript[url] ||= OpenStruct.new({:uid => uid(url), :messages => []})
+              @errors.javascript[url].messages << OpenStruct.new(error)
+            end
+            yield OpenStruct.new({:body => json['content'], :request => OpenStruct.new({:base_url => url}), :success? => true})
+          else
+            if limit > 0
+              phantomjs url, limit - 1
+            else
+              yield OpenStruct.new({:success? => false, :code => 0, :status_message => "Server timed out", :request => OpenStruct.new({:base_url => url})})
+            end
+          end
+        end
+        @phantomjs_count += 1
+      end
+    end
+
+    def typhoeus url, limit = @max_retrys
+      if @skips.none? { |regex| regex.match(url) }
+        req = Typhoeus::Request.new(
+          url,
+          followlocation: true,
+          verbose: @verbose
+        )
         req.on_complete do |resp|
           if resp.timed_out?
             if limit > 0
-              perform(Typhoeus::Request.new(req.base_url, req.options), limit - 1, &Proc.new)
+              typhoeus(url, limit - 1, &Proc.new)
             else
-              yield OpenStruct.new({:success => false, :code => '0', :status_message => "Server timed out"})
+              yield OpenStruct.new({:success? => false, :code => 0, :status_message => "Server timed out", :request => OpenStruct.new({:base_url => url})})
             end
           else
             yield resp
           end
         end
         @hydra.queue req
+        @typhoeus_count += 1
       end
     end
   end

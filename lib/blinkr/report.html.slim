@@ -10,9 +10,8 @@ body
 
   .container
     h1 Blinkr
-    p.lead 
-      | Detecting broken links
-    - errors.each do |url, err|
+    h2 Broken links and missing resources
+    - errors.links.each do |url, err|
       .panel.panel-danger
         .panel-heading
           a data-toggle="collapse" href="##{err.uid}" id="control-#{err.uid}"
@@ -23,7 +22,7 @@ body
             i.fa.fa-external-link
           .pull-right.badge
             - if err.code > 0 || !err.status_message.nil?
-              ' #{err.code} #{err.status_message}
+              ' #{err.code if err.code > 0} #{err.status_message}
             - elsif !err.return_message.nil? && err.return_message != 'No error'
               ' #{err.return_message}
         .panel-body.collapse id="#{err.uid}"
@@ -32,12 +31,14 @@ body
           ul.list-group
           - err.refs.each do |ref|
             li.list-group-item
-              '#{ref.src} (line #{ref.line_no}) 
+              '#{ref.src}
               a href="#{ref.src}" target='_blank'
                 i.fa.fa-external-link
               '
               a href="view-source:#{ref.src}" target='_blank'
                 i.fa.fa-file-code-o
+              .pull-right
+                |(#{ref.src_location})
               pre #{ref.snippet}
         javascript:
           $('##{err.uid}').on('show.bs.collapse', function () {
@@ -46,8 +47,36 @@ body
           $('##{err.uid}').on('hide.bs.collapse', function () {
             $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
           });
-    - if errors.empty?
+    - if errors.links.empty?
       .panel.panel-success
         .panel-heading
           | No broken links detected
+    - unless errors.javascript.nil?
+      h2 Page load JavaScript Errors
+      - errors.javascript.each do |url, errs|
+        .panel.panel-danger
+          .panel-heading
+            a data-toggle="collapse" href="##{errs.uid}" id="control-#{errs.uid}"
+              i.fa.fa-caret-square-o-right
+            '
+            a href="#{url}" target='_blank'
+              | #{url}
+              i.fa.fa-external-link
+          .panel-body.collapse id="#{errs.uid}"
+            ul.list-group
+            - errs.messages.each do |message|
+              li.list-group-item
+                pre= message.msg
+                pre= message.trace
+          javascript:
+            $('##{err.uid}').on('show.bs.collapse', function () {
+              $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
+            });
+            $('##{err.uid}').on('hide.bs.collapse', function () {
+              $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
+            });
+      - if errors.javascript.empty?
+        .panel.panel-success
+          .panel-heading
+            | No JavaScript errors detected
 

@@ -24,4 +24,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'nokogiri', '~> 1.5'
   spec.add_dependency 'typhoeus', '~> 0.6'
   spec.add_dependency 'slim', '~> 2.0'
+  spec.add_dependency 'parallel', '~> 1.0.0'
 end
