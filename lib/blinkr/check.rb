@@ -75,8 +75,9 @@ module Blinkr
         end
       end
       @hydra.run
-      msg << " Loaded #{@phantomjs_count} pages using phantomjs." if @phantomjs_count > 0
-      msg << " Performed #{@typhoeus_count} requests using typhoeus."
+      msg = ''
+      msg << "Loaded #{@phantomjs_count} pages using phantomjs." if @phantomjs_count > 0
+      msg << "Performed #{@typhoeus_count} requests using typhoeus."
       puts msg
       @errors
     end
@@ -186,8 +187,7 @@ module Blinkr
         req = Typhoeus::Request.new(
           url,
           followlocation: true,
-          verbose: @vverbose,
-          connecttimeout: 20
+          verbose: @vverbose
         )
         req.on_complete do |resp|
           if resp.timed_out?
