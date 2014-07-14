@@ -52,17 +52,9 @@ module Blinkr
             src = resp.request.base_url
             url = attr.value
             unless url.nil?
-              begin
-                uri = URI(url)
-                uri = URI.join(src, url) if uri.path.nil? || uri.path.empty? || uri.path.relative?
-                uri = URI.join(@base_url, uri) if uri.scheme.nil?
-                url = uri.to_s
-              rescue Exception => e
-              end
-              if uri.nil? || uri.is_a?(URI::HTTP)
-                @links[url] ||= []
-                @links[url] << {:src => src, :line => attr.line, :snippet => attr.parent.to_s}
-              end
+              url = sanitize url, src
+              @links[url] ||= []
+              @links[url] << {:src => src, :line => attr.line, :snippet => attr.parent.to_s}
             end
           end
         else
@@ -119,6 +111,17 @@ module Blinkr
 
     private
 
+    def sanitize url, src
+      begin
+        uri = URI(url)
+        uri = URI.join(src, url) if uri.path.nil? || uri.path.empty? || uri.relative?
+        uri = URI.join(@base_url, uri) if uri.scheme.nil?
+        url = uri.to_s
+      rescue Exception => e
+      end
+      url.chomp('#').chomp('index.html')
+    end
+
     def add_error url, code, status_message, return_message, src, src_location, snippet
       @errors.links[url] ||= OpenStruct.new({ :code => code.nil? ? nil : code.to_i, :status_message => status_message, :return_message => return_message, :refs => [], :uid => uid(url) })
       @errors.links[url].refs << OpenStruct.new({:src => src, :src_location => src_location, :snippet => snippet})
@@ -133,8 +136,9 @@ module Blinkr
         Parallel.each(urls, :in_threads => 8) do |url|
           phantomjs url, @max_page_retrys, &Proc.new
         end
-        puts "Page load complete" if @verbose
-        puts "\nStarting link check" if @verbose
+        puts "-------------------------------------------" if @verbose
+        puts "- Page load complete, starting link check -" if @verbose
+        puts "-------------------------------------------" if @verbose 
       else
         urls.each do |url|
           typhoeus url, @max_page_retrys, &Proc.new
@@ -155,7 +159,7 @@ module Blinkr
               @errors.javascript[url] ||= OpenStruct.new({:uid => uid(url), :messages => []})
               @errors.javascript[url].messages << OpenStruct.new(error)
             end
-            response = Typhoeus::Response.new(code: 200, body: json['content'])
+            response = Typhoeus::Response.new(code: 200, body: json['content'], mock: true)
             response.request = Typhoeus::Request.new(url)
             Typhoeus.stub(url).and_return(response)
             yield response
@@ -165,7 +169,7 @@ module Blinkr
               phantomjs url, limit - 1, max, &Proc.new
             else
               puts "Loading #{url} via phantomjs failed" if @verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out")
+              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out", mock: true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               yield response
@@ -191,7 +195,7 @@ module Blinkr
               typhoeus(url, limit - 1, max, &Proc.new)
             else
               puts "Loading #{url} via typhoeus failed" if @verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out")
+              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out", mock: true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               yield response
