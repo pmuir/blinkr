@@ -158,7 +158,8 @@ module Blinkr
             json = JSON.load(File.read(f.path))
             json['resourceErrors'].each do |error|
               @errors.resources[url] ||= OpenStruct.new({:uid => uid(url), :messages => [] })
-              errorString = error['errorString'].slice(error['errorString'].rindex('server replied: ') + 16, error['errorString'].length) unless error['errorString'].nil?
+              start = error['errorString'].rindex('server replied: ')
+              errorString = error['errorString'].slice(start.nil? ? 0 : start + 16, error['errorString'].length) unless error['errorString'].nil?
               @errors.resources[url].messages << OpenStruct.new(error.update({:errorString => errorString}))
             end
             json['javascriptErrors'].each do |error|
