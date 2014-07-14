@@ -26,7 +26,6 @@ module Blinkr
       @verbose = vverbose || verbose
       @vverbose = vverbose
       @viewport = viewport || 1200
-      @typhoeus_cache = Blinkr::Cache.new
       Typhoeus::Config.cache = @typhoeus_cache
       @hydra = Typhoeus::Hydra.new(max_concurrency: 200)
       @phantomjs_count = 0
@@ -76,9 +75,8 @@ module Blinkr
         end
       end
       @hydra.run
-      msg = "Checked #{@phantomjs_count + @typhoeus_count} urls."
       msg << " Loaded #{@phantomjs_count} pages using phantomjs." if @phantomjs_count > 0
-      msg << " Fetched #{@typhoeus_cache.size} pages into typhoeus cache, for #{@typhoeus_count} requests."
+      msg << " Performed #{@typhoeus_count} requests using typhoeus."
       puts msg
       @errors
     end
@@ -93,6 +91,8 @@ module Blinkr
         puts "Method: #{resp.request.options[:method]}"
         puts "Max redirects: #{resp.request.options[:maxredirs]}"
         puts "Follow location header: #{resp.request.options[:followlocation]}"
+        puts "Timeout (s): #{resp.request.options[:timeout] || 'none'}"
+        puts "Connection timeout (s): #{resp.request.options[:connecttimeout] || 'none'}"
         puts "\nHeaders"
         puts "-------"
         unless resp.request.options[:headers].nil?
@@ -186,11 +186,13 @@ module Blinkr
         req = Typhoeus::Request.new(
           url,
           followlocation: true,
-          verbose: @vverbose 
+          verbose: @vverbose,
+          connecttimeout: 20
         )
         req.on_complete do |resp|
           if resp.timed_out?
             if limit > 1 
+              puts "Code: #{resp.code}. Msg: #{resp.return_message}"
               puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @verbose
               typhoeus(url, limit - 1, max, &Proc.new)
             else
