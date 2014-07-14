@@ -42,15 +42,42 @@ module Blinkr
       else
         sitemap = Nokogiri::XML(File.open(@sitemap))
       end
+      @links = {}
       pages(sitemap.css('loc').collect { |loc| loc.content }) do |resp|
         if resp.success?
           puts "Loaded page #{resp.request.base_url}" if @verbose
           body = Nokogiri::HTML(resp.body)
           body.css('a[href]').each do |a|
-            check_attr(a.attribute('href'),resp.request.base_url)
+            attr = a.attribute('href')
+            src = resp.request.base_url
+            url = attr.value
+            unless url.nil?
+              begin
+                uri = URI(url)
+                uri = URI.join(src, url) if uri.path.nil? || uri.path.empty? || uri.path.relative?
+                uri = URI.join(@base_url, uri) if uri.scheme.nil?
+                url = uri.to_s
+              rescue Exception => e
+              end
+              if uri.nil? || uri.is_a?(URI::HTTP)
+                @links[url] ||= []
+                @links[url] << {:src => src, :line => attr.line, :snippet => attr.parent.to_s}
+              end
+            end
           end
         else
           puts "#{resp.code} #{resp.status_message} Unable to load page #{resp.request.base_url} #{'(' + resp.return_message + ')' unless resp.return_message.nil?}"
+        end
+      end
+      @hydra.run
+      @links.each do |url, srcs|
+        typhoeus(url) do |resp|
+          puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @verbose
+          unless resp.success?
+            srcs.each do |src|
+              add_error url, resp.code, resp.status_message, resp.return_message, src[:src], "line #{src[:line]}", src[:snippet]
+            end
+          end
         end
       end
       @hydra.run
@@ -91,26 +118,6 @@ module Blinkr
     end
 
     private
-
-    def check_attr attr, src
-      url = attr.value
-      unless url.nil?
-        begin
-          uri = URI(url)
-          uri = URI.join(src, url) if uri.path.nil? || uri.path.empty? || uri.path.relative?
-          uri = URI.join(@base_url, uri) if uri.scheme.nil?
-          url = uri.to_s
-        rescue Exception => e
-        end
-        if uri.nil? || uri.is_a?(URI::HTTP)
-          typhoeus(url) do |resp|
-            unless resp.success?
-              add_error url, resp.code, resp.status_message, resp.return_message, src, "line #{attr.line}", attr.parent.to_s
-            end
-          end
-        end
-      end
-    end
 
     def add_error url, code, status_message, return_message, src, src_location, snippet
       @errors.links[url] ||= OpenStruct.new({ :code => code.nil? ? nil : code.to_i, :status_message => status_message, :return_message => return_message, :refs => [], :uid => uid(url) })
