@@ -125,7 +125,9 @@ module Blinkr
           phantomjs url, @max_page_retrys, &Proc.new
         end
       else
-        typhoeus url, @max_page_retrys, &Proc.new
+        urls.each do |url|
+          typhoeus url, @max_page_retrys, &Proc.new
+        end
       end
     end
 
