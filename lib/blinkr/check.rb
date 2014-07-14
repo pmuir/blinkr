@@ -116,7 +116,7 @@ module Blinkr
     end
 
     def uid url
-       url.gsub(/:|\/|\.|\?|#|%|=|&|,|~|;|\!|@/, '_')
+       url.gsub(/:|\/|\.|\?|#|%|=|&|,|~|;|\!|@|\)|\(/, '_')
     end
 
     def pages urls
