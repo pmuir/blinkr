@@ -11,7 +11,7 @@ module Blinkr
 
     SNAP_JS = File.expand_path('snap.js', File.dirname(__FILE__))
 
-    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200
+    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200, ignore_fragments: false
       raise "Must specify base_url" if base_url.nil?
       unless sitemap.nil?
         @sitemap = sitemap
@@ -26,6 +26,7 @@ module Blinkr
       @verbose = vverbose || verbose
       @vverbose = vverbose
       @viewport = viewport || 1200
+      @ignore_fragments = ignore_fragments
       Typhoeus::Config.cache = @typhoeus_cache
       @hydra = Typhoeus::Hydra.new(max_concurrency: 200)
       @phantomjs_count = 0
@@ -120,6 +121,7 @@ module Blinkr
         uri = URI(url)
         uri = URI.join(src, url) if uri.path.nil? || uri.path.empty? || uri.relative?
         uri = URI.join(@base_url, uri) if uri.scheme.nil?
+        uri.fragment = '' if @ignore_fragments
         url = uri.to_s
       rescue Exception => e
       end

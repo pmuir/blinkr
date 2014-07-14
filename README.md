@@ -71,13 +71,22 @@ max_retrys: 3
 # find errors in the console that a page cannot be loaded
 max_page_retrys: 3
 
+# Allows blinkr to ignore fragments (#foo) which can reduce the number of URLs
+# to check. By default false.
+ignore_fragments: true
+
 ````
 
-Specify a custom config file on the command link:
+You can specify a custom config file on the command link:
 
 ````
 blinkr -c my_blinkr.yaml
 ````
+
+If you want to see more details about the URLs blinkr is checking, you can use
+the `-v` option:
+
+blinkr -u http://www.jboss.org -v
 
 If you need to debug why a particular URL is being reported as bad using
 blinkr, but works in your web browser, you can load a single URL using typhoeus:
@@ -86,7 +95,8 @@ blinkr, but works in your web browser, you can load a single URL using typhoeus:
 blinkr -c my_blinkr.yaml -s http://www.acme.com/corp
 ````
 
-Additionally, you can specify the `-v` option with `-s` to tell libcurl to run in verbose mode:
+Additionally, you can specify the `-w` option to tell libcurl to run in verbose
+mode (this is very verbose, so normally used with `-s`):
 
 ````
 blinkr -c my_blinkr.yaml -s http://www.acme.com/corp -v
