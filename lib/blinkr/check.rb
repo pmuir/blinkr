@@ -192,7 +192,6 @@ module Blinkr
         req.on_complete do |resp|
           if resp.timed_out?
             if limit > 1 
-              puts "Code: #{resp.code}. Msg: #{resp.return_message}"
               puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @verbose
               typhoeus(url, limit - 1, max, &Proc.new)
             else
