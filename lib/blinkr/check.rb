@@ -36,6 +36,7 @@ module Blinkr
     def check
       @errors = OpenStruct.new({:links => {}})
       @errors.javascript = {} if @browser == 'phantomjs'
+      @errors.resources = {} if @browser == 'phantomjs'
       puts "Loading sitemap from #{@sitemap}"
       if @sitemap =~ URI::regexp
         sitemap = Nokogiri::XML(Typhoeus.get(@sitemap, followlocation: true).body)
@@ -156,7 +157,9 @@ module Blinkr
           if system "phantomjs #{SNAP_JS} #{url} #{@viewport} #{f.path}"
             json = JSON.load(File.read(f.path))
             json['resourceErrors'].each do |error|
-              add_error error['url'], error['errorCode'], error['errorString'], nil, url, 'Loading resource', nil
+              @errors.resources[url] ||= OpenStruct.new({:uid => uid(url), :messages => [] })
+              errorString = error['errorString'].slice(error['errorString'].rindex('server replied: ') + 16, error['errorString'].length) unless error['errorString'].nil?
+              @errors.resources[url].messages << OpenStruct.new(error.update({:errorString => errorString}))
             end
             json['javascriptErrors'].each do |error|
               @errors.javascript[url] ||= OpenStruct.new({:uid => uid(url), :messages => []})

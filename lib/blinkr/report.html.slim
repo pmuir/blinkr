@@ -14,7 +14,7 @@ body
     - errors.links.each do |url, err|
       .panel.panel-danger
         .panel-heading
-          a data-toggle="collapse" href="##{err.uid}" id="control-#{err.uid}"
+          a data-toggle="collapse" href="#a-#{err.uid}" id="control-a-#{err.uid}"
             i.fa.fa-caret-square-o-right
           '
           a href="#{url}" target='_blank'
@@ -25,7 +25,7 @@ body
               ' #{err.code if err.code > 0} #{err.status_message}
             - elsif !err.return_message.nil? && err.return_message != 'No error'
               ' #{err.return_message}
-        .panel-body.collapse id="#{err.uid}"
+        .panel-body.collapse id="a-#{err.uid}"
           - unless err.return_message.nil? || err.return_message == 'No error' || (err.code == 0 && err.status_message.nil?)
             |Message: #{err.return_message}
           ul.list-group
@@ -41,11 +41,11 @@ body
                 |(#{ref.src_location})
               pre #{ref.snippet}
         javascript:
-          $('##{err.uid}').on('show.bs.collapse', function () {
-            $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
+          $('#a-#{err.uid}').on('show.bs.collapse', function () {
+            $('a#control-a-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
           });
-          $('##{err.uid}').on('hide.bs.collapse', function () {
-            $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
+          $('#a-#{err.uid}').on('hide.bs.collapse', function () {
+            $('a#control-a-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
           });
     - if errors.links.empty?
       .panel.panel-success
@@ -56,27 +56,63 @@ body
       - errors.javascript.each do |url, err|
         .panel.panel-danger
           .panel-heading
-            a data-toggle="collapse" href="##{err.uid}" id="control-#{err.uid}"
+            a data-toggle="collapse" href="#j-#{err.uid}" id="control-j-#{err.uid}"
               i.fa.fa-caret-square-o-right
             '
             a href="#{url}" target='_blank'
               | #{url}
               i.fa.fa-external-link
-          .panel-body.collapse id="#{err.uid}"
+          .panel-body.collapse id="j-#{err.uid}"
             ul.list-group
             - err.messages.each do |message|
               li.list-group-item
                 pre= message.msg
                 pre= message.trace
           javascript:
-            $('##{err.uid}').on('show.bs.collapse', function () {
-              $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
+            $('#j-#{err.uid}').on('show.bs.collapse', function () {
+              $('a#control-j-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
             });
-            $('##{err.uid}').on('hide.bs.collapse', function () {
-              $('a#control-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
+            $('#j-#{err.uid}').on('hide.bs.collapse', function () {
+              $('a#control-j-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
             });
       - if errors.javascript.empty?
         .panel.panel-success
           .panel-heading
             | No JavaScript errors detected
+
+    - unless errors.resources.nil?
+      h2 Resource loading errors
+      - errors.resources.each do |url, err|
+        .panel.panel-danger
+          .panel-heading
+            a data-toggle="collapse" href="#r-#{err.uid}" id="control-r-#{err.uid}"
+              i.fa.fa-caret-square-o-right
+            '
+            a href="#{url}" target='_blank'
+              | #{url}
+              i.fa.fa-external-link
+          .panel-body.collapse id="r-#{err.uid}"
+            ul.list-group
+            - err.messages.each do |message|
+              li.list-group-item
+                '#{message.url}
+                a href="#{message.url}" target='_blank'
+                  i.fa.fa-external-link
+                .pull-right.badge.alert-danger
+                  - if message.errorCode > 0
+                    ' #{message.errorCode}
+                  - unless message.errorString.nil?
+                    | #{message.errorString}
+
+          javascript:
+            $('#r-#{err.uid}').on('show.bs.collapse', function () {
+              $('a#control-r-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
+            });
+            $('#r-#{err.uid}').on('hide.bs.collapse', function () {
+              $('a#control-r-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
+            });
+      - if errors.resources.empty?
+        .panel.panel-success
+          .panel-heading
+            | No resource loading errors detected
 
