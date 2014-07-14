@@ -51,7 +51,7 @@ module Blinkr
             attr = a.attribute('href')
             src = resp.request.base_url
             url = attr.value
-            unless url.nil?
+            if !url.nil? && @skips.none? { |regex| regex.match(url) }
               url = sanitize url, src
               @links[url] ||= []
               @links[url] << {:src => src, :line => attr.line, :snippet => attr.parent.to_s}
@@ -62,6 +62,9 @@ module Blinkr
         end
       end
       @hydra.run
+      puts "-----------------------------------------------" if @verbose
+      puts " Page load complete, #{@links.size} links to check " if @verbose
+      puts "-----------------------------------------------" if @verbose 
       @links.each do |url, srcs|
         typhoeus(url) do |resp|
           puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @verbose
@@ -136,9 +139,6 @@ module Blinkr
         Parallel.each(urls, :in_threads => 8) do |url|
           phantomjs url, @max_page_retrys, &Proc.new
         end
-        puts "-------------------------------------------" if @verbose
-        puts "- Page load complete, starting link check -" if @verbose
-        puts "-------------------------------------------" if @verbose 
       else
         urls.each do |url|
           typhoeus url, @max_page_retrys, &Proc.new
