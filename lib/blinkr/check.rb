@@ -143,12 +143,18 @@ module Blinkr
               @errors.javascript[url] ||= OpenStruct.new({:uid => uid(url), :messages => []})
               @errors.javascript[url].messages << OpenStruct.new(error)
             end
-            yield OpenStruct.new({:body => json['content'], :request => OpenStruct.new({:base_url => url}), :success? => true})
+            response = Typhoeus::Response.new(code: 200, body: json['content'])
+            response.request = Typhoeus::Request.new(url)
+            Typhoeus.stub(url).and_return(response)
+            yield response
           else
             if limit > 0
               phantomjs url, limit - 1
             else
-              yield OpenStruct.new({:success? => false, :code => 0, :status_message => "Server timed out", :request => OpenStruct.new({:base_url => url})})
+              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out")
+              response.request = Typhoeus::Request.new(url)
+              Typhoeus.stub(url).and_return(response)
+              yield response
             end
           end
         end
@@ -168,7 +174,10 @@ module Blinkr
             if limit > 0
               typhoeus(url, limit - 1, &Proc.new)
             else
-              yield OpenStruct.new({:success? => false, :code => 0, :status_message => "Server timed out", :request => OpenStruct.new({:base_url => url})})
+              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out")
+              response.request = Typhoeus::Request.new(url)
+              Typhoeus.stub(url).and_return(response)
+              yield response
             end
           else
             yield resp
