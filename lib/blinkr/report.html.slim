@@ -53,18 +53,18 @@ body
           | No broken links detected
     - unless errors.javascript.nil?
       h2 Page load JavaScript Errors
-      - errors.javascript.each do |url, errs|
+      - errors.javascript.each do |url, err|
         .panel.panel-danger
           .panel-heading
-            a data-toggle="collapse" href="##{errs.uid}" id="control-#{errs.uid}"
+            a data-toggle="collapse" href="##{err.uid}" id="control-#{err.uid}"
               i.fa.fa-caret-square-o-right
             '
             a href="#{url}" target='_blank'
               | #{url}
               i.fa.fa-external-link
-          .panel-body.collapse id="#{errs.uid}"
+          .panel-body.collapse id="#{err.uid}"
             ul.list-group
-            - errs.messages.each do |message|
+            - err.messages.each do |message|
               li.list-group-item
                 pre= message.msg
                 pre= message.trace
