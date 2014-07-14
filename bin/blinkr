@@ -14,13 +14,16 @@ OptionParser.new do |opts|
   opts.on("-u", "--base-url URL", "specify the URL of the site root") do |opt|
     options[:base_url] = opt
   end
-  opts.on("-v", "--verbose", "output libcurl debugging info to the console, used with -s") do |opt|
+  opts.on("-v", "--verbose", "output debugging info to the console") do |opt|
     options[:verbose] = opt
+  end
+  opts.on("-w", "--very-verbose", "additionally, output libcurl debugging info to the console, normally used with -s") do |opt|
+    options[:vverbose] = opt
   end
   opts.on("-s", "--single-url URL", "test a single URL, outputting the response to the console") do |opt|
     options[:single_url] = opt
   end
 end.parse!
 
-Blinkr.run options[:base_url], options[:config], options[:single_url], options[:verbose]
+Blinkr.run options[:base_url], options[:config], options[:single_url], options[:verbose], options[:vverbose]
 

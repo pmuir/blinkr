@@ -11,7 +11,7 @@ module Blinkr
 
     SNAP_JS = File.expand_path('snap.js', File.dirname(__FILE__))
 
-    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, browser: 'typhoeus', viewport: 1200
+    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200
       raise "Must specify base_url" if base_url.nil?
       unless sitemap.nil?
         @sitemap = sitemap
@@ -23,7 +23,8 @@ module Blinkr
       @max_retrys = max_retrys || 3
       @max_page_retrys = max_page_retrys || @max_retrys
       @browser = browser || 'typhoeus'
-      @verbose = verbose
+      @verbose = vverbose || verbose
+      @vverbose = vverbose
       @viewport = viewport || 1200
       @typhoeus_cache = Blinkr::Cache.new
       Typhoeus::Config.cache = @typhoeus_cache
@@ -43,6 +44,7 @@ module Blinkr
       end
       pages(sitemap.css('loc').collect { |loc| loc.content }) do |resp|
         if resp.success?
+          puts "Loaded page #{resp.request.base_url}" if @verbose
           body = Nokogiri::HTML(resp.body)
           body.css('a[href]').each do |a|
             check_attr(a.attribute('href'),resp.request.base_url)
@@ -124,6 +126,8 @@ module Blinkr
         Parallel.each(urls, :in_threads => 8) do |url|
           phantomjs url, @max_page_retrys, &Proc.new
         end
+        puts "Page load complete" if @verbose
+        puts "\nStarting link check" if @verbose
       else
         urls.each do |url|
           typhoeus url, @max_page_retrys, &Proc.new
@@ -131,7 +135,8 @@ module Blinkr
       end
     end
 
-    def phantomjs url, limit = @max_retrys
+    def phantomjs url, limit = @max_retrys, max = -1
+      max = limit if max == -1
       if @skips.none? { |regex| regex.match(url) }
         Tempfile.open('blinkr') do|f|
           if system "phantomjs #{SNAP_JS} #{url} #{@viewport} #{f.path}"
@@ -148,9 +153,11 @@ module Blinkr
             Typhoeus.stub(url).and_return(response)
             yield response
           else
-            if limit > 0
-              phantomjs url, limit - 1
+            if limit > 1
+              puts "Loading #{url} via phantomjs (attempt #{max - limit + 2} of #{max})" if @verbose
+              phantomjs url, limit - 1, max, &Proc.new
             else
+              puts "Loading #{url} via phantomjs failed" if @verbose
               response = Typhoeus::Response.new(code: 0, status_message: "Server timed out")
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
@@ -162,18 +169,21 @@ module Blinkr
       end
     end
 
-    def typhoeus url, limit = @max_retrys
+    def typhoeus url, limit = @max_retrys, max = -1
+      max = limit if max == -1
       if @skips.none? { |regex| regex.match(url) }
         req = Typhoeus::Request.new(
           url,
           followlocation: true,
-          verbose: @verbose
+          verbose: @vverbose 
         )
         req.on_complete do |resp|
           if resp.timed_out?
-            if limit > 0
-              typhoeus(url, limit - 1, &Proc.new)
+            if limit > 1 
+              puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @verbose
+              typhoeus(url, limit - 1, max, &Proc.new)
             else
+              puts "Loading #{url} via typhoeus failed" if @verbose
               response = Typhoeus::Response.new(code: 0, status_message: "Server timed out")
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
