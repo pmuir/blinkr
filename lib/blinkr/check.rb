@@ -67,7 +67,7 @@ module Blinkr
       @links.each do |url, srcs|
         typhoeus(url) do |resp|
           puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @verbose
-          unless resp.success?
+          unless resp.success? || resp.code == 200
             srcs.each do |src|
               add_error url, resp.code, resp.status_message, resp.return_message, src[:src], "line #{src[:line]}", src[:snippet]
             end
