@@ -10,7 +10,28 @@ body
 
   .container
     h1 Blinkr
-    h2 Broken links and missing resources
+    ol
+      li 
+        a href='#links'
+          p class="#{errors.links.empty? ? 'text-success' : 'text-danger'}"
+            |Broken links
+      - unless errors.javascript.nil?
+        li
+          a href='#javascript'
+            p class="#{errors.javascript.empty? ? 'text-success' : 'text-danger'}"
+              | Page load JavaScript errors
+      - unless errors.resources.nil?
+        li
+          a href='#resources'
+            p class="#{errors.resources.empty? ? 'text-success' : 'text-danger'}"
+              | Resource loading errors
+
+    a id='links'
+    h2 
+      |Broken links (
+      code
+        |a[href]
+      |)
     - errors.links.each do |url, err|
       .panel.panel-danger
         .panel-heading
@@ -50,9 +71,11 @@ body
     - if errors.links.empty?
       .panel.panel-success
         .panel-heading
+          a id='resources'
           | No broken links detected
     - unless errors.javascript.nil?
-      h2 Page load JavaScript Errors
+      a id='javascript'
+      h2 Page load JavaScript errors
       - errors.javascript.each do |url, err|
         .panel.panel-danger
           .panel-heading
@@ -78,9 +101,11 @@ body
       - if errors.javascript.empty?
         .panel.panel-success
           .panel-heading
+            a id='javascript'
             | No JavaScript errors detected
 
     - unless errors.resources.nil?
+      a id='resources'
       h2 Resource loading errors
       - errors.resources.each do |url, err|
         .panel.panel-danger
@@ -114,5 +139,6 @@ body
       - if errors.resources.empty?
         .panel.panel-success
           .panel-heading
+            a id='resources'
             | No resource loading errors detected
 
