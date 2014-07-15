@@ -183,7 +183,7 @@ module Blinkr
               phantomjs url, limit - 1, max, &Proc.new
             else
               puts "Loading #{url} via phantomjs failed" if @verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out", mock: true)
+              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               yield response
@@ -209,7 +209,7 @@ module Blinkr
               typhoeus(url, limit - 1, max, &Proc.new)
             else
               puts "Loading #{url} via typhoeus failed" if @verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out", mock: true)
+              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               yield response

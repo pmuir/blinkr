@@ -43,9 +43,11 @@ body
             i.fa.fa-external-link
           .pull-right.badge
             - if err.code > 0 || !err.status_message.nil?
-              ' #{err.code if err.code > 0} #{err.status_message}
+              span data-toggle="tooltip" title="Status message"
+                ' #{err.code if err.code > 0} #{err.status_message}
             - elsif !err.return_message.nil? && err.return_message != 'No error'
-              ' #{err.return_message}
+              span data-toggle="tooltip" title="Return message"
+                ' #{err.return_message}
         .panel-body.collapse id="a-#{err.uid}"
           - unless err.return_message.nil? || err.return_message == 'No error' || (err.code == 0 && err.status_message.nil?)
             |Message: #{err.return_message}
@@ -141,4 +143,7 @@ body
           .panel-heading
             a id='resources'
             | No resource loading errors detected
+  
+  javascript:
+    $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
 
