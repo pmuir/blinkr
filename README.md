@@ -84,6 +84,9 @@ max_page_retrys: 3
 # to check. By default false.
 ignore_fragments: true
 
+# Control the number of threads used to run phantomjs. By default 8.
+phantomjs_threads: 8
+
 ````
 
 You can specify a custom config file on the command link:

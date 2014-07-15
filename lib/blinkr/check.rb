@@ -11,7 +11,7 @@ module Blinkr
 
     SNAP_JS = File.expand_path('snap.js', File.dirname(__FILE__))
 
-    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200, ignore_fragments: false, ignores: []
+    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200, ignore_fragments: false, ignores: [], phantomjs_threads: 8
       raise "Must specify base_url" if base_url.nil?
       unless sitemap.nil?
         @sitemap = sitemap
@@ -33,6 +33,7 @@ module Blinkr
       @hydra = Typhoeus::Hydra.new(max_concurrency: 200)
       @phantomjs_count = 0
       @typhoeus_count = 0
+      @phantomjs_threads = phantomjs_threads || 8
     end
 
     def check
@@ -144,7 +145,7 @@ module Blinkr
 
     def pages urls
       if @browser == 'phantomjs'
-        Parallel.each(urls, :in_threads => 8) do |url|
+        Parallel.each(urls, :in_threads => @phantomjs_threads) do |url|
           phantomjs url, @max_page_retrys, &Proc.new
         end
       else
