@@ -11,7 +11,7 @@ module Blinkr
 
     SNAP_JS = File.expand_path('snap.js', File.dirname(__FILE__))
 
-    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200, ignore_fragments: false
+    def initialize base_url, sitemap: '', skips: [], max_retrys: 3, max_page_retrys: 3, verbose: false, vverbose: false, browser: 'typhoeus', viewport: 1200, ignore_fragments: false, ignores: []
       raise "Must specify base_url" if base_url.nil?
       unless sitemap.nil?
         @sitemap = sitemap
@@ -19,6 +19,8 @@ module Blinkr
         @sitemap = URI.join(base_url, 'sitemap.xml').to_s
       end
       @skips = skips || []
+      @ignores = ignores || []
+      @ignores.each {|ignore| raise "An ignore must be a hash" unless ignore.is_a? Hash}
       @base_url = base_url
       @max_retrys = max_retrys || 3
       @max_page_retrys = max_page_retrys || @max_retrys
@@ -71,7 +73,10 @@ module Blinkr
           puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @verbose
           unless resp.success? || resp.code == 200
             srcs.each do |src|
-              add_error url, resp.code, resp.status_message, resp.return_message, src[:src], "line #{src[:line]}", src[:snippet]
+              unless ignored? url, resp.code, resp.status_message || resp.return_message
+                @errors.links[url] ||= OpenStruct.new({ :code => resp.code.nil? ? nil : resp.code.to_i, :status_message => resp.status_message, :return_message => resp.return_message, :refs => [], :uid => uid(url) })
+                @errors.links[url].refs << OpenStruct.new({:src => src[:src], :src_location => "line #{src[:line]}", :snippet => src[:snippet]})
+              end
             end
           end
         end
@@ -117,6 +122,10 @@ module Blinkr
 
     private
 
+    def ignored? url, code, message
+      @ignores.any? { |ignore| ( ignore.has_key?('url') ? !ignore['url'].match(url).nil? : true )  && ( ignore.has_key?('code') ? ignore['code'] == code : true ) && ( ignore.has_key?('message') ? !ignore['message'].match(message).nil? : true ) }
+    end
+
     def sanitize url, src
       begin
         uri = URI(url)
@@ -127,11 +136,6 @@ module Blinkr
       rescue Exception => e
       end
       url.chomp('#').chomp('index.html')
-    end
-
-    def add_error url, code, status_message, return_message, src, src_location, snippet
-      @errors.links[url] ||= OpenStruct.new({ :code => code.nil? ? nil : code.to_i, :status_message => status_message, :return_message => return_message, :refs => [], :uid => uid(url) })
-      @errors.links[url].refs << OpenStruct.new({:src => src, :src_location => src_location, :snippet => snippet})
     end
 
     def uid url
@@ -157,10 +161,12 @@ module Blinkr
           if system "phantomjs #{SNAP_JS} #{url} #{@viewport} #{f.path}"
             json = JSON.load(File.read(f.path))
             json['resourceErrors'].each do |error|
-              @errors.resources[url] ||= OpenStruct.new({:uid => uid(url), :messages => [] })
               start = error['errorString'].rindex('server replied: ')
               errorString = error['errorString'].slice(start.nil? ? 0 : start + 16, error['errorString'].length) unless error['errorString'].nil?
-              @errors.resources[url].messages << OpenStruct.new(error.update({:errorString => errorString}))
+              unless ignored? error['url'], error['errorCode'].nil? ? nil : error['errorCode'].to_i, errorString
+                @errors.resources[url] ||= OpenStruct.new({:uid => uid(url), :messages => [] })
+                @errors.resources[url].messages << OpenStruct.new(error.update({'errorString' => errorString}))
+              end
             end
             json['javascriptErrors'].each do |error|
               @errors.javascript[url] ||= OpenStruct.new({:uid => uid(url), :messages => []})

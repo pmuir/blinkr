@@ -36,12 +36,21 @@ If you want to customize blinkr, create a config file `blinkr.yaml`. For example
 
 
 ````
-# Links not to check
+# Links and pages not to check (may be a regexp or a string)
 skips:
   - !ruby/regexp /^\/video\/((?!91710755).)*\/$/
   - !ruby/regexp /^\/quickstarts\/((?!eap\/kitchensink).)*\/*$/
   - !ruby/regexp /^\/boms\/((?!eap\/jboss-javaee-6_0).)*\/*$/
   - !ruby/regexp /^\/archetypes\/((?!eap\/jboss-javaee6-webapp-archetype).)*\/*$/
+
+# Errors to ignore when generating the output. Each ignore should be a hash
+# containing a url (may be regexp or a string), an error code (integer) and a
+# error message (may be a regexp or a string)
+ignores:
+  - url: http://www.acme.com/foo
+    message: Not Found
+  - url: !ruby/regexp /^https?:\/\/(www\.)?acme\.com\/bar\/
+    code: 500
 
 # The output file to write the report to
 report: _tmp/blinkr.html

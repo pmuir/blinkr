@@ -10,7 +10,7 @@ module Blinkr
     else
       config = {}
     end
-    blinkr = Blinkr::Check.new(base_url || config['base_url'], sitemap: config['sitemap'], skips: config['skips'], max_retrys: config['max_retrys'], max_page_retrys: config['max_page_retrys'], verbose: verbose, vverbose: vverbose, browser: config['browser'], viewport: config['viewport'], ignore_fragments: config['ignore_fragments'])
+    blinkr = Blinkr::Check.new(base_url || config['base_url'], sitemap: config['sitemap'], skips: config['skips'], max_retrys: config['max_retrys'], max_page_retrys: config['max_page_retrys'], verbose: verbose, vverbose: vverbose, browser: config['browser'], viewport: config['viewport'], ignore_fragments: config['ignore_fragments'], ignores: config['ignores'])
     if single.nil?
       Blinkr::Report.render(blinkr.check, config['report'])
     else
