@@ -194,6 +194,10 @@ module Blinkr
       end
     end
 
+    def retry? resp
+      resp.timed_out? || (resp.code == 0 && [ "Server returned nothing (no headers, no data)", "SSL connect error", "Failure when receiving data from the peer" ].include?(resp.return_message) )
+    end
+
     def typhoeus url, limit = @max_retrys, max = -1
       max = limit if max == -1
       if @skips.none? { |regex| regex.match(url) }
@@ -203,7 +207,7 @@ module Blinkr
           verbose: @vverbose
         )
         req.on_complete do |resp|
-          if resp.timed_out?
+          if retry? resp
             if limit > 1 
               puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @verbose
               typhoeus(url, limit - 1, max, &Proc.new)
