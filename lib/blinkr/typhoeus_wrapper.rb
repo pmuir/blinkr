@@ -11,11 +11,11 @@ module Blinkr
 
     attr_reader :count, :hydra
 
-    def initialize config, errors
+    def initialize config, context
       @config = config.validate
       @hydra = Typhoeus::Hydra.new(max_concurrency: 200)      
       @count = 0
-      @errors = errors
+      @context = context
     end
 
     def process_all urls, limit, &block
@@ -82,10 +82,10 @@ module Blinkr
               response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
-              block.call response
+              block.call response, nil, nil
             end
           else
-            block.call resp
+            block.call resp, nil, nil
           end
         end
         @hydra.queue req

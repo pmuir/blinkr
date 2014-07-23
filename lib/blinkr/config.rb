@@ -8,7 +8,7 @@ module Blinkr
       Config.new(YAML.load_file(file).merge(args))
     end
 
-    DEFAULTS = {:skips => [], :ignores => [], :max_retrys => 3, :browser => 'typhoeus', :viewport => 1200, :phantomjs_threads => 8}
+    DEFAULTS = {:skips => [], :ignores => [], :max_retrys => 3, :browser => 'typhoeus', :viewport => 1200, :phantomjs_threads => 8, :report => 'blinkr.html'}
 
     def initialize(hash={})
       super(DEFAULTS.merge(hash))

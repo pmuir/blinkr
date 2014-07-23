@@ -5,7 +5,10 @@ require 'blinkr/phantomjs_wrapper'
 require 'blinkr/typhoeus_wrapper'
 require 'blinkr/http_utils'
 require 'blinkr/sitemap'
-require 'parallel'
+require 'blinkr/report'
+require 'blinkr/extensions/links'
+require 'blinkr/extensions/javascript'
+require 'blinkr/extensions/resources'
 
 module Blinkr
   class Pipeline
@@ -14,56 +17,68 @@ module Blinkr
 
     def initialize config
       @config = config.validate
+      @extensions = []
+      default_pipeline config
+    end
+
+    def extension ext
+      @extensions << ext
     end
 
     def run
-      errors = OpenStruct.new({:links => {}})
-      typhoeus, browser = TyphoeusWrapper.new(@config, errors)
-      browser = PhantomJSWrapper.new(@config, errors) if @config.browser == 'phantomjs'
-      
-      links = {}
+      context = OpenStruct.new({:pages => {}})
+      typhoeus, browser = TyphoeusWrapper.new(@config, context)
+      browser = PhantomJSWrapper.new(@config, context) if @config.browser == 'phantomjs'
       page_count = 0
-      browser.process_all(sitemap_locations, @config.max_page_retrys) do |resp|
-        if resp.success?
-          puts "Loaded page #{resp.request.base_url}" if @config.verbose
-          body = Nokogiri::HTML(resp.body)
-          body.css('a[href]').each do |a|
-            attr = a.attribute('href')
-            src = resp.request.base_url
-            url = attr.value
-            unless url.nil? || @config.skipped?(url)
-              url = sanitize url, src
-              links[url] ||= []
-              links[url] << {:src => src, :line => attr.line, :snippet => attr.parent.to_s}
-            end
-          end
+      browser.process_all(sitemap_locations, @config.max_page_retrys) do |response, resource_errors, javascript_errors|
+        if response.success?
+          url = response.request.base_url
+          puts "Loaded page #{url}" if @config.verbose
+          body = Nokogiri::HTML(response.body)
+          page = OpenStruct.new({ :response => response, :body => body, :errors => [], :uid => uid(url), :resource_errors => resource_errors || [], :javascript_errors => javascript_errors || [] })
+          context.pages[url] = page
+          exec :collect, page
           page_count += 1
         else
-          puts "#{resp.code} #{resp.status_message} Unable to load page #{resp.request.base_url} #{'(' + resp.return_message + ')' unless resp.return_message.nil?}"
+          puts "#{respones.code} #{response.status_message} Unable to load page #{url} #{'(' + response.return_message + ')' unless response.return_message.nil?}"
         end
       end
-      typhoeus.hydra.run
-      puts "-----------------------------------------------" if @config.verbose
-      puts " Page load complete, #{links.length} links to check " if @config.verbose
-      puts "-----------------------------------------------" if @config.verbose 
-      links.each do |url, srcs|
-        typhoeus.process(url, @config.max_retrys) do |resp|
-          puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @config.verbose
-          unless resp.success? || resp.code == 200
-            srcs.each do |src|
-              unless @config.ignored? url, resp.code, resp.status_message || resp.return_message
-                errors.links[url] ||= OpenStruct.new({ :code => resp.code.nil? ? nil : resp.code.to_i, :status_message => resp.status_message, :return_message => resp.return_message, :refs => [], :uid => uid(url) })
-                errors.links[url].refs << OpenStruct.new({:src => src[:src], :src_location => "line #{src[:line]}", :snippet => src[:snippet]})
-              end
-            end
-          end
-        end
-      end
-      typhoeus.hydra.run
+      typhoeus.hydra.run if @config.browser == 'typhoeus'
+      exec :analyse, context, typhoeus
       puts "Loaded #{page_count} pages using #{browser.name}. Performed #{typhoeus.count} requests using typhoeus."
-      errors
+      context.pages.reject! { |url, page| page.errors.empty? }
+      Blinkr::Report.new(context, self, @config).render
+    end
+  
+    def append context
+      exec :append, context
+    end
+      
+    def transform page, error
+      default = yield
+      result = exec(:transform, page, error, default)
+      if result.empty?
+        default
+      else
+        result.join
+      end
     end
 
+    private
+
+    def default_pipeline config
+      extension Blinkr::Extension::Links.new config
+      extension Blinkr::Extension::JavaScript.new config
+      extension Blinkr::Extension::Resources.new config
+    end
+
+    def exec method, *args
+      result = []
+      @extensions.each do |e|
+        result << e.send(method, *args) if e.respond_to? method
+      end
+      result
+    end
   end
 end
 

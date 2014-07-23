@@ -2,6 +2,8 @@ require 'typhoeus'
 require 'ostruct'
 require 'tempfile'
 require 'blinkr/http_utils'
+require 'parallel'
+
 
 module Blinkr
   class PhantomJSWrapper 
@@ -11,12 +13,10 @@ module Blinkr
 
     attr_reader :count
 
-    def initialize config, errors
+    def initialize config, context
       @config = config.validate
-      @errors = errors
+      @context = context
       @count = 0
-      @errors.javascript = {}
-      @errors.resources = {}
     end
 
     def process_all urls, limit, &block
@@ -40,22 +40,10 @@ module Blinkr
         Tempfile.open('blinkr') do|f|
           if system "phantomjs #{SNAP_JS} #{url} #{@config.viewport} #{f.path}"
             json = JSON.load(File.read(f.path))
-            json['resourceErrors'].each do |error|
-              start = error['errorString'].rindex('server replied: ')
-              errorString = error['errorString'].slice(start.nil? ? 0 : start + 16, error['errorString'].length) unless error['errorString'].nil?
-              unless @config.ignored? error['url'], error['errorCode'].nil? ? nil : error['errorCode'].to_i, errorString
-                @errors.resources[url] ||= OpenStruct.new({:uid => uid(url), :messages => [] })
-                @errors.resources[url].messages << OpenStruct.new(error.update({'errorString' => errorString}))
-              end
-            end
-            json['javascriptErrors'].each do |error|
-              @errors.javascript[url] ||= OpenStruct.new({:uid => uid(url), :messages => []})
-              @errors.javascript[url].messages << OpenStruct.new(error)
-            end
             response = Typhoeus::Response.new(code: 200, body: json['content'], mock: true)
             response.request = Typhoeus::Request.new(url)
             Typhoeus.stub(url).and_return(response)
-            block.call response
+            block.call response, json['resourceErrors'], json['javascriptErrors']
           else
             if limit > 1
               puts "Loading #{url} via phantomjs (attempt #{max - limit + 2} of #{max})" if verbose
@@ -65,7 +53,7 @@ module Blinkr
               response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
-              block.call response
+              block.call response, nil, nil
             end
           end
         end

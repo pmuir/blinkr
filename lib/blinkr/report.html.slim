@@ -10,140 +10,56 @@ body
 
   .container
     h1 Blinkr
-    ol
-      li 
-        a href='#links'
-          p class="#{errors.links.empty? ? 'text-success' : 'text-danger'}"
-            |Broken links
-      - unless errors.javascript.nil?
-        li
-          a href='#javascript'
-            p class="#{errors.javascript.empty? ? 'text-success' : 'text-danger'}"
-              | Page load JavaScript errors
-      - unless errors.resources.nil?
-        li
-          a href='#resources'
-            p class="#{errors.resources.empty? ? 'text-success' : 'text-danger'}"
-              | Resource loading errors
+    - blinkr.pages.each do |url, page|
 
-    a id='links'
-    h2 
-      |Broken links (
-      code
-        |a[href]
-      |)
-    - errors.links.each do |url, err|
       .panel.panel-danger
         .panel-heading
-          a data-toggle="collapse" href="#a-#{err.uid}" id="control-a-#{err.uid}"
-            i.fa.fa-caret-square-o-right
-          '
-          a href="#{url}" target='_blank'
-            | #{url} 
+          a> data-toggle="collapse" href="#r-#{page.uid}" id="control-r-#{page.uid}"
+            i.fa.fa-caret-square-o-right>
+          ' #{url}
+          a> href="#{url}" target='_blank'
             i.fa.fa-external-link
-          .pull-right.badge
-            - if err.code > 0 || !err.status_message.nil?
-              span data-toggle="tooltip" title="Status message"
-                ' #{err.code if err.code > 0} #{err.status_message}
-            - elsif !err.return_message.nil? && err.return_message != 'No error'
-              span data-toggle="tooltip" title="Return message"
-                ' #{err.return_message}
-        .panel-body.collapse id="a-#{err.uid}"
-          - unless err.return_message.nil? || err.return_message == 'No error' || (err.code == 0 && err.status_message.nil?)
-            |Message: #{err.return_message}
+          a href="view-source:#{url}" target='_blank'
+            i.fa.fa-file-code-o
+        .panel-body.collapse id="r-#{page.uid}"
           ul.list-group
-          - err.refs.each do |ref|
-            li.list-group-item
-              '#{ref.src}
-              a href="#{ref.src}" target='_blank'
-                i.fa.fa-external-link
-              '
-              a href="view-source:#{ref.src}" target='_blank'
-                i.fa.fa-file-code-o
-              .pull-right
-                |(#{ref.src_location})
-              pre #{ref.snippet}
+          - page.errors.each do |error|
+            == pipeline.transform page, error do
+              li.list-group-item
+                - unless error.icon.nil?
+                  i class="fa fa-2x #{error.icon} pull-left"
+                - unless error.code.nil? && error.message.nil?
+                    .pull-right.badge.alert-danger
+                      - unless error.code.nil?
+                        ' #{error.code}
+                      - unless error.message.nil?
+                        | #{error.message}
+                div
+                  ' #{error.title}
+                  - if error.url
+                    a href="#{error.url}" target='_blank'
+                      i.fa.fa-external-link
+                  - if error.detail
+                    p= error.detail
+                - if error.snippet
+                  pre #{error.snippet}
         javascript:
-          $('#a-#{err.uid}').on('show.bs.collapse', function () {
-            $('a#control-a-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
+          $('#r-#{page.uid}').on('show.bs.collapse', function () {
+            $('a#control-r-#{page.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
           });
-          $('#a-#{err.uid}').on('hide.bs.collapse', function () {
-            $('a#control-a-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
+          $('#r-#{page.uid}').on('hide.bs.collapse', function () {
+            $('a#control-r-#{page.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
           });
-    - if errors.links.empty?
+
+    - if blinkr.pages.length == 0
       .panel.panel-success
         .panel-heading
           a id='resources'
-          | No broken links detected
-    - unless errors.javascript.nil?
-      a id='javascript'
-      h2 Page load JavaScript errors
-      - errors.javascript.each do |url, err|
-        .panel.panel-danger
-          .panel-heading
-            a data-toggle="collapse" href="#j-#{err.uid}" id="control-j-#{err.uid}"
-              i.fa.fa-caret-square-o-right
-            '
-            a href="#{url}" target='_blank'
-              | #{url}
-              i.fa.fa-external-link
-          .panel-body.collapse id="j-#{err.uid}"
-            ul.list-group
-            - err.messages.each do |message|
-              li.list-group-item
-                pre= message.msg
-                pre= message.trace
-          javascript:
-            $('#j-#{err.uid}').on('show.bs.collapse', function () {
-              $('a#control-j-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
-            });
-            $('#j-#{err.uid}').on('hide.bs.collapse', function () {
-              $('a#control-j-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
-            });
-      - if errors.javascript.empty?
-        .panel.panel-success
-          .panel-heading
-            a id='javascript'
-            | No JavaScript errors detected
+          | No errors detected
 
-    - unless errors.resources.nil?
-      a id='resources'
-      h2 Resource loading errors
-      - errors.resources.each do |url, err|
-        .panel.panel-danger
-          .panel-heading
-            a data-toggle="collapse" href="#r-#{err.uid}" id="control-r-#{err.uid}"
-              i.fa.fa-caret-square-o-right
-            '
-            a href="#{url}" target='_blank'
-              | #{url}
-              i.fa.fa-external-link
-          .panel-body.collapse id="r-#{err.uid}"
-            ul.list-group
-            - err.messages.each do |message|
-              li.list-group-item
-                '#{message.url}
-                a href="#{message.url}" target='_blank'
-                  i.fa.fa-external-link
-                .pull-right.badge.alert-danger
-                  - if message.errorCode > 0
-                    ' #{message.errorCode}
-                  - unless message.errorString.nil?
-                    | #{message.errorString}
+    - pipeline.append(blinkr).each do |result|
+      == result
 
-          javascript:
-            $('#r-#{err.uid}').on('show.bs.collapse', function () {
-              $('a#control-r-#{err.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
-            });
-            $('#r-#{err.uid}').on('hide.bs.collapse', function () {
-              $('a#control-r-#{err.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
-            });
-      - if errors.resources.empty?
-        .panel.panel-success
-          .panel-heading
-            a id='resources'
-            | No resource loading errors detected
-  
   javascript:
     $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
 

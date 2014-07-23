@@ -15,7 +15,7 @@ module Blinkr
     end
     
     if single.nil?
-      Blinkr::Report.render(Blinkr::Pipeline.new(config).run, config.report)
+      Blinkr::Pipeline.new(config).run
     else
       Blinkr::TyphoeusWrapper.new(config).debug(single)
     end
