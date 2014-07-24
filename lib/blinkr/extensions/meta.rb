@@ -43,8 +43,8 @@ module Blinkr
           page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{Missing <title>}, :message => %Q{Missing <title>}, :icon => 'fa-header' })
         else
           title = elms.first.text
-          @titles[title] ||= []
-          @titles[title] << page
+          @titles[title] ||= {}
+          @titles[title][page.response.effective_url] = page
           if title.length < 20
             page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{<title> too short (lines #{elms.first.line})}, :message => %Q{<title> too short (< 20 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
           end
@@ -68,8 +68,8 @@ module Blinkr
           page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{Missing <meta name="description">}, :message => %Q{Missing <meta name="description">}, :icon => 'fa-header' })
         else
           desc = elms.first['content']
-          @descriptions[desc] ||= []
-          @descriptions[desc] << page
+          @descriptions[desc] ||= {}
+          @descriptions[desc][page.response.effective_url] = page
           if desc.length < 60
             page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{<meta name="description"> too short (lines #{elms.first.line})}, :message => %Q{<meta name="description"> too short (< 60 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
           end

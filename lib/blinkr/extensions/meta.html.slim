@@ -8,12 +8,12 @@
       ' #{description}
     .panel-body.collapse id="meta-d-#{index}"
       ul.list-group
-      - pages.each do |page|
+      - pages.each do |url, page|
         li.list-group-item
-          ' #{page.response.effective_url}
-          a> href="#{page.response.effective_url}" target='_blank'
+          ' #{url}
+          a> href="#{url}" target='_blank'
             i.fa.fa-external-link
-          a href="view-source:#{page.response.effective_url}" target='_blank'
+          a href="view-source:#{url}" target='_blank'
             i.fa.fa-file-code-o
     javascript:
       $('#meta-d-#{index}').on('show.bs.collapse', function () {
@@ -39,12 +39,12 @@
       ' #{title}
     .panel-body.collapse id="meta-t-#{index}"
       ul.list-group
-      - pages.each do |page|
+      - pages.each do |url, page|
         li.list-group-item
-          ' #{page.response.effective_url}
-          a> href="#{page.response.effective_url}" target='_blank'
+          ' #{url}
+          a> href="#{url}" target='_blank'
             i.fa.fa-external-link
-          a href="view-source:#{page.response.effective_url}" target='_blank'
+          a href="view-source:#{url}" target='_blank'
             i.fa.fa-file-code-o
     javascript:
       $('#meta-t-#{index}').on('show.bs.collapse', function () {
