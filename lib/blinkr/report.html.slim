@@ -12,18 +12,18 @@ body
     h1 Blinkr
     p.lead Blackbox testing for websites
     h2 Pages
-    - blinkr.pages.each do |url, page|
+    - blinkr.pages.each_with_index do |(url, page), index|
 
       .panel.panel-danger
         .panel-heading
-          a> data-toggle="collapse" href="#r-#{page.uid}" id="control-r-#{page.uid}"
+          a> data-toggle="collapse" href="#p-#{index}" id="control-p-#{index}"
             i.fa.fa-caret-square-o-right>
           ' #{url}
           a> href="#{url}" target='_blank'
             i.fa.fa-external-link
           a href="view-source:#{url}" target='_blank'
             i.fa.fa-file-code-o
-        .panel-body.collapse id="r-#{page.uid}"
+        .panel-body.collapse id="p-#{index}"
           ul.list-group
           - page.errors.each do |error|
             == engine.transform page, error do
@@ -46,11 +46,11 @@ body
                 - if error.snippet
                   pre #{error.snippet}
         javascript:
-          $('#r-#{page.uid}').on('show.bs.collapse', function () {
-            $('a#control-r-#{page.uid}').html('<i class="fa fa-caret-square-o-down"></i>');
+          $('#p-#{index}').on('show.bs.collapse', function () {
+            $('a#control-p-#{index}').html('<i class="fa fa-caret-square-o-down"></i>');
           });
-          $('#r-#{page.uid}').on('hide.bs.collapse', function () {
-            $('a#control-r-#{page.uid}').html('<i class="fa fa-caret-square-o-right"></i>');
+          $('#p-#{index}').on('hide.bs.collapse', function () {
+            $('a#control-p-#{index}').html('<i class="fa fa-caret-square-o-right"></i>');
           });
 
     - if blinkr.pages.length == 0

@@ -34,10 +34,6 @@ module Blinkr
       dest.chomp('#').chomp('index.html')
     end
 
-    def uid url
-       url.gsub(/:|\/|\.|\?|#|%|=|&|,|~|;|\!|@|\)|\(|\s/, '_')
-    end
-
     def retry? resp
       resp.timed_out? || (resp.code == 0 && [ "Server returned nothing (no headers, no data)", "SSL connect error", "Failure when receiving data from the peer" ].include?(resp.return_message) )
     end
