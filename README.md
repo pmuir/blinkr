@@ -114,6 +114,62 @@ mode (this is very verbose, so normally used with `-s`):
 blinkr -c my_blinkr.yaml -s http://www.acme.com/corp -v
 ````
 
+## Extending Blinkr
+
+Blinkr is based around a pipeline. Issues with the pages are *collected*, 
+*analysed*, and then passed to the report for *transformation* and rendering.
+Additional sections may *appended* to the report.
+
+To add extensions to blinkr, you need to define a custom pipeline:
+
+````
+require 'acme/spellcheck'
+
+Blinkr::Extensions::Pipeline.new do |config|
+  # define the default extensions
+  extension Blinkr::Extensions::Links.new config
+  extension Blinkr::Extensions::JavaScript.new config
+  extension Blinkr::Extensions::Resources.new config
+
+  # define custom extensions
+  extension ACME::Extensions::SpellCheck.new config
+end
+````
+
+NOTE: You must add the default extensions to a custom pipeline, for them to be
+executed.
+
+An extension is just a standard Ruby class. It should declare an 
+`initialize(config)` method, and may declare one or more of:
+
+* `collect(page)`
+* `analyze(context, typhoeus)`
+* `transform(page, error, default_html)`
+* `append(context)`
+
+Each method is called as the pipeline progresses. Arguments passed are:
+
+* `page` - a object containing the tyhpoeus `response`, the page `body` (as a
+  Nokogiri HTML document), an array of `errors` for the page, any 
+  `resource_errors` which ocurred when the page was loaded, and any 
+  `javascript_errors` which ocurred when the page was loaded
+* `context` - a map of `url` => `page`s which are being analysed. After the
+  analyze phase, and before the transform phase, any pages with no errors
+  are removed from the context
+* `typhoeus` - a wrapper around typhoeus, defining a `process` method and 
+  a `process_all` method, both of which take a `url` and a `retry` limit, and
+  accept a block to execute when a response is returned.
+* `error` - an individual error, consisting of a `type`, a `url`, a `title`, a
+  `code`, a `message`, a `detail`, a `snippet` and an fontawesome `icon` class
+* `default_html` - the default HTML used to display the error
+
+`transform` should return the HTML used to display the error. `append` should 
+return any HTML to be appended to the report. A templating language, such as
+slim or haml may be used to generate the HTML.
+
+The build extensions, in lib/blinkr/extensions are good examples of how 
+extensions can perform broken link analysis, or collect and format resource
+loading and javascript execution errors.
 
 ## Contributing
 

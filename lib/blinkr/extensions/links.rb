@@ -23,7 +23,7 @@ module Blinkr
         end
       end
 
-      def analyse context, typhoeus
+      def analyze context, typhoeus
         puts "----------------------" if @config.verbose
         puts " #{@links.length} links to check " if @config.verbose
         puts "----------------------" if @config.verbose

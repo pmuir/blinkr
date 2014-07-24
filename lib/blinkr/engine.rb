@@ -41,7 +41,7 @@ module Blinkr
         end
       end
       typhoeus.hydra.run if @config.browser == 'typhoeus'
-      analyse context, typhoeus
+      analyze context, typhoeus
       puts "Loaded #{page_count} pages using #{browser.name}. Performed #{typhoeus.count} requests using typhoeus."
       context.pages.reject! { |url, page| page.errors.empty? }
       Blinkr::Report.new(context, self, @config).render
@@ -51,7 +51,7 @@ module Blinkr
       exec :append, context
     end
       
-    def transform page, error
+    def transform page, error, &block
       default = yield
       result = exec(:transform, page, error, default)
       if result.empty?
@@ -61,8 +61,8 @@ module Blinkr
       end
     end
 
-    def analyse context, typhoeus
-      exec :analyse, context, typhoeus
+    def analyze context, typhoeus
+      exec :analyze, context, typhoeus
     end
 
     def collect page
