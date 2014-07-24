@@ -1,5 +1,5 @@
 require 'blinkr/version'
-require 'blinkr/pipeline'
+require 'blinkr/engine'
 require 'blinkr/report'
 require 'blinkr/config'
 require 'blinkr/typhoeus_wrapper'
@@ -15,7 +15,7 @@ module Blinkr
     end
     
     if single.nil?
-      Blinkr::Pipeline.new(config).run
+      Blinkr::Engine.new(config).run
     else
       Blinkr::TyphoeusWrapper.new(config).debug(single)
     end

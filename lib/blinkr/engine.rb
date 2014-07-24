@@ -9,20 +9,17 @@ require 'blinkr/report'
 require 'blinkr/extensions/links'
 require 'blinkr/extensions/javascript'
 require 'blinkr/extensions/resources'
+require 'blinkr/extensions/pipeline'
 
 module Blinkr
-  class Pipeline
+  class Engine 
     include HttpUtils
     include Sitemap
 
     def initialize config
       @config = config.validate
       @extensions = []
-      default_pipeline config
-    end
-
-    def extension ext
-      @extensions << ext
+      load_pipeline
     end
 
     def run
@@ -37,19 +34,19 @@ module Blinkr
           body = Nokogiri::HTML(response.body)
           page = OpenStruct.new({ :response => response, :body => body, :errors => [], :uid => uid(url), :resource_errors => resource_errors || [], :javascript_errors => javascript_errors || [] })
           context.pages[url] = page
-          exec :collect, page
+          collect page
           page_count += 1
         else
           puts "#{respones.code} #{response.status_message} Unable to load page #{url} #{'(' + response.return_message + ')' unless response.return_message.nil?}"
         end
       end
       typhoeus.hydra.run if @config.browser == 'typhoeus'
-      exec :analyse, context, typhoeus
+      analyse context, typhoeus
       puts "Loaded #{page_count} pages using #{browser.name}. Performed #{typhoeus.count} requests using typhoeus."
       context.pages.reject! { |url, page| page.errors.empty? }
       Blinkr::Report.new(context, self, @config).render
     end
-  
+
     def append context
       exec :append, context
     end
@@ -64,12 +61,24 @@ module Blinkr
       end
     end
 
+    def analyse context, typhoeus
+      exec :analyse, context, typhoeus
+    end
+
+    def collect page
+      exec :collect, page
+    end
+
     private
 
-    def default_pipeline config
-      extension Blinkr::Extension::Links.new config
-      extension Blinkr::Extension::JavaScript.new config
-      extension Blinkr::Extension::Resources.new config
+    def extension ext
+      @extensions << ext
+    end
+
+    def default_pipeline
+      extension Blinkr::Extensions::Links.new @config
+      extension Blinkr::Extensions::JavaScript.new @config
+      extension Blinkr::Extensions::Resources.new @config
     end
 
     def exec method, *args
@@ -79,6 +88,23 @@ module Blinkr
       end
       result
     end
+
+    def load_pipeline
+      unless @config.pipeline.nil?
+        pipeline_file = File.join(File.dirname(@config.config_file), @config.pipeline)
+        if  File.exists?( pipeline_file )
+          p = eval(File.read( pipeline_file ), nil, pipeline_file, 1).load @config
+          p.extensions.each do |e|
+            extension( e )
+          end
+        else
+          raise "Cannot find pipeline file #{pipeline_file}"
+        end
+      else
+        default_pipeline
+      end
+    end
+
   end
 end
 

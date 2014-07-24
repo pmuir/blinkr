@@ -24,7 +24,7 @@ body
         .panel-body.collapse id="r-#{page.uid}"
           ul.list-group
           - page.errors.each do |error|
-            == pipeline.transform page, error do
+            == engine.transform page, error do
               li.list-group-item
                 - unless error.icon.nil?
                   i class="fa fa-2x #{error.icon} pull-left"
@@ -57,7 +57,7 @@ body
           a id='resources'
           | No errors detected
 
-    - pipeline.append(blinkr).each do |result|
+    - engine.append(blinkr).each do |result|
       == result
 
   javascript:

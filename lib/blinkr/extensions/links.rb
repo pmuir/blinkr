@@ -1,7 +1,7 @@
 require 'blinkr/http_utils'
 
 module Blinkr
-  module Extension
+  module Extensions
     class Links
       include HttpUtils
 

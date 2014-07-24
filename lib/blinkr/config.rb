@@ -5,7 +5,7 @@ module Blinkr
 
     def self.read file, args
       raise "Cannot read #{file}" unless File.exists? file
-      Config.new(YAML.load_file(file).merge(args))
+      Config.new(YAML.load_file(file).merge(args).merge({ :config_file => file }))
     end
 
     DEFAULTS = {:skips => [], :ignores => [], :max_retrys => 3, :browser => 'typhoeus', :viewport => 1200, :phantomjs_threads => 8, :report => 'blinkr.html'}

@@ -1,5 +1,5 @@
 module Blinkr
-  module Extension
+  module Extensions
     class Resources
 
       def initialize config
