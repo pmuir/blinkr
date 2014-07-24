@@ -1,0 +1,62 @@
+.h2 Duplicate Descriptions
+- descriptions.each_with_index do |(description, pages), index|
+
+  .panel.panel-danger
+    .panel-heading
+      a> data-toggle="collapse" href="#meta-d-#{index}" id="control-meta-d-#{index}"
+        i.fa.fa-caret-square-o-right>
+      ' #{description}
+    .panel-body.collapse id="meta-d-#{index}"
+      ul.list-group
+      - pages.each do |page|
+        li.list-group-item
+          ' #{page.response.effective_url}
+          a> href="#{page.response.effective_url}" target='_blank'
+            i.fa.fa-external-link
+          a href="view-source:#{page.response.effective_url}" target='_blank'
+            i.fa.fa-file-code-o
+    javascript:
+      $('#meta-d-#{index}').on('show.bs.collapse', function () {
+        $('a#control-meta-d-#{index}').html('<i class="fa fa-caret-square-o-down"></i>');
+      });
+      $('#meta-d-#{index}').on('hide.bs.collapse', function () {
+        $('a#control-meta-d-#{index}').html('<i class="fa fa-caret-square-o-right"></i>');
+      });
+
+- if descriptions.length == 0
+  .panel.panel-success
+    .panel-heading
+      a id='resources'
+      | No duplicate descriptions detected
+
+.h2 Duplicate Titles
+- titles.each_with_index do |(title, pages), index|
+
+  .panel.panel-danger
+    .panel-heading
+      a> data-toggle="collapse" href="#meta-t-#{index}" id="control-meta-t-#{index}"
+        i.fa.fa-caret-square-o-right>
+      ' #{title}
+    .panel-body.collapse id="meta-t-#{index}"
+      ul.list-group
+      - pages.each do |page|
+        li.list-group-item
+          ' #{page.response.effective_url}
+          a> href="#{page.response.effective_url}" target='_blank'
+            i.fa.fa-external-link
+          a href="view-source:#{page.response.effective_url}" target='_blank'
+            i.fa.fa-file-code-o
+    javascript:
+      $('#meta-t-#{index}').on('show.bs.collapse', function () {
+        $('a#control-meta-t-#{index}').html('<i class="fa fa-caret-square-o-down"></i>');
+      });
+      $('#meta-t-#{index}').on('hide.bs.collapse', function () {
+        $('a#control-meta-t-#{index}').html('<i class="fa fa-caret-square-o-right"></i>');
+      });
+
+- if titles.length == 0
+  .panel.panel-success
+    .panel-heading
+      a id='resources'
+      | No duplicate titles detected
+
