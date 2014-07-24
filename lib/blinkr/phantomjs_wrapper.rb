@@ -40,7 +40,7 @@ module Blinkr
         Tempfile.open('blinkr') do|f|
           if system "phantomjs #{SNAP_JS} #{url} #{@config.viewport} #{f.path}"
             json = JSON.load(File.read(f.path))
-            response = Typhoeus::Response.new(code: 200, body: json['content'], mock: true)
+            response = Typhoeus::Response.new(code: 200, body: json['content'], effective_url: json['url'], mock: true)
             response.request = Typhoeus::Request.new(url)
             Typhoeus.stub(url).and_return(response)
             block.call response, json['resourceErrors'], json['javascriptErrors']

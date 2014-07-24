@@ -13,7 +13,7 @@ module Blinkr
       def collect page
         page.body.css('a[href]').each do |a|
           attr = a.attribute('href')
-          src = page.response.request.base_url
+          src = page.response.effective_url
           url = attr.value
           unless url.nil? || @config.skipped?(url)
             url = sanitize url, src
