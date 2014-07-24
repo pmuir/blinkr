@@ -37,7 +37,7 @@ module Blinkr
                   message = resp.return_message
                 else
                   message = resp.status_message
-                  detail = resp.return_message
+                  detail = resp.return_message unless resp.return_message == "No error"
                 end
                 src[:page].errors << OpenStruct.new({ :type => 'link', :url => url, :title => "#{url} (line #{src[:line]})", :code => code, :message => message, :detail => detail, :snippet => src[:snippet], :icon => 'fa-bookmark-o' })
               end
