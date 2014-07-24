@@ -30,7 +30,7 @@ module Blinkr
         @links.each do |url, metadata|
           typhoeus.process(url, @config.max_retrys) do |resp|
             puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @config.verbose
-            unless resp.success? || resp.code == 200 || @config.ignored?(url, resp.code, resp.status_message || resp.return_message)
+            unless resp.success? || resp.code == 200
               metadata.each do |src|
                 code = resp.code.to_i unless resp.code.nil? || resp.code == 0
                 if resp.status_message.nil?

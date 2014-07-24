@@ -8,9 +8,7 @@ module Blinkr
 
       def collect page
         page.body.css('a:not([title])').each do |a|
-          unless @config.ignored?(a['href'], nil, 'title text missing')
-            page.errors << OpenStruct.new({ :type => 'a_title_missing',  :title => "#{a['href']} (line #{a.line})", :message => 'title text missing', :snippet => a.to_s, :icon => 'fa-info' })
-          end
+          page.errors << OpenStruct.new({ :type => 'a_title_missing',  :title => "#{a['href']} (line #{a.line})", :message => 'title text missing', :snippet => a.to_s, :icon => 'fa-info' })
         end
       end
 

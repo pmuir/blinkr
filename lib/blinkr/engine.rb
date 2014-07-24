@@ -32,7 +32,7 @@ module Blinkr
           url = response.request.base_url
           puts "Loaded page #{url}" if @config.verbose
           body = Nokogiri::HTML(response.body)
-          page = OpenStruct.new({ :response => response, :body => body, :errors => [], :uid => uid(url), :resource_errors => resource_errors || [], :javascript_errors => javascript_errors || [] })
+          page = OpenStruct.new({ :response => response, :body => body, :errors => ErrorArray.new(@config), :uid => uid(url), :resource_errors => resource_errors || [], :javascript_errors => javascript_errors || [] })
           context.pages[url] = page
           collect page
           page_count += 1
@@ -70,6 +70,22 @@ module Blinkr
     end
 
     private
+
+    class ErrorArray < Array
+
+      def initialize config
+        @config = config
+      end
+
+      def << error
+        unless @config.ignored?(error.url, error.code, error.message)
+          super
+        else
+          self
+        end
+      end
+
+    end
 
     def extension ext
       @extensions << ext
