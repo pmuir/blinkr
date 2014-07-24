@@ -15,8 +15,8 @@ module Blinkr
           attr = a.attribute('href')
           src = page.response.effective_url
           url = attr.value
+          url = sanitize url, src
           unless url.nil? || @config.skipped?(url)
-            url = sanitize url, src
             @links[url] ||= []
             @links[url] << {:page => page, :line => attr.line, :snippet => attr.parent.to_s}
           end
