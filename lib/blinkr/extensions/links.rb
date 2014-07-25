@@ -39,7 +39,7 @@ module Blinkr
                   message = resp.status_message
                   detail = resp.return_message unless resp.return_message == "No error"
                 end
-                src[:page].errors << OpenStruct.new({ :type => 'link', :url => url, :title => "#{url} (line #{src[:line]})", :code => code, :message => message, :detail => detail, :snippet => src[:snippet], :icon => 'fa-bookmark-o' })
+                src[:page].errors << OpenStruct.new({ :severity => 'danger', :category => 'Resources missing', :type => '<a href=""> target cannot be loaded', :url => url, :title => "#{url} (line #{src[:line]})", :code => code, :message => message, :detail => detail, :snippet => src[:snippet], :icon => 'fa-bookmark-o' })
               end
             end
           end

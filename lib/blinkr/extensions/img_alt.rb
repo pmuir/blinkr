@@ -8,7 +8,7 @@ module Blinkr
 
       def collect page
         page.body.css('img:not([alt])').each do |img|
-          page.errors << OpenStruct.new({ :type => 'img_alt_missing',  :title => "#{img['src']} (line #{img.line})", :message => 'alt text missing', :snippet => img.to_s, :icon => 'fa-info' })
+          page.errors << OpenStruct.new({ :severity => 'warning', :category => 'SEO', :type => '<img alt=""> missing',  :title => "#{img['src']} (line #{img.line})", :message => '<img alt=""> missing', :snippet => img.to_s, :icon => 'fa-info' })
         end
       end
 

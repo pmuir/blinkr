@@ -38,18 +38,18 @@ module Blinkr
             lines << elm.line
             snippets << elm.to_s
           end
-          page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{more than one <title> (lines #{lines.join(', ')})}, :message => %Q{more than one <title>}, :snippet => snippets.join('\n'), :icon => 'fa-header' })
+          page.errors << OpenStruct.new({ :severity => 'info', :category => 'HTML Compatibility/Correctness', :type => '<title> tag declared more than once',  :title => %Q{<title> declared more than once (lines #{lines.join(', ')})}, :message => %Q{<title> declared more than onc}, :snippet => snippets.join('\n'), :icon => 'fa-header' })
         elsif elms.empty?
-          page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{Missing <title>}, :message => %Q{Missing <title>}, :icon => 'fa-header' })
+          page.errors << OpenStruct.new({ :severity => 'warning', :category => 'SEO', :type => '<title> tag missing',  :title => %Q{<title> tag missing}, :message => %Q{<title> tag missing}, :icon => 'fa-header' })
         else
           title = elms.first.text
           @titles[title] ||= {}
           @titles[title][page.response.effective_url] = page
           if title.length < 20
-            page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{<title> too short (lines #{elms.first.line})}, :message => %Q{<title> too short (< 20 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
+            page.errors << OpenStruct.new({ :severity => 'info', :category => 'SEO', :type => 'page title too short',  :title => %Q{<title> too short (line #{elms.first.line})}, :message => %Q{<title> too short (< 20 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
           end
           if title.length > 55
-            page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{<title> too long (lines #{elms.first.line})}, :message => %Q{<title> too long (> 55 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
+            page.errors << OpenStruct.new({ :severity => 'info', :category => 'SEO', :type => 'page title too long',  :title => %Q{<title> too long (line #{elms.first.line})}, :message => %Q{<title> too long (> 55 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
           end
         end
       end
@@ -63,18 +63,18 @@ module Blinkr
             lines << elm.line
             snippets << elm.to_s
           end
-          page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{more than one <meta name="description"> (lines #{lines.join(', ')})}, :message => %Q{more than one <meta name="description">}, :snippet => snippets.join('\n'), :icon => 'fa-header' })
+          page.errors << OpenStruct.new({ :severity => 'info', :category => 'HTML Compatibility/Correctness', :type => '<meta name="description"> tag declared more than once',  :title => %Q{<meta name="description"> tag declared more than once (lines #{lines.join(', ')})}, :message => %Q{<meta name="description"> tag declared more than once}, :snippet => snippets.join('\n'), :icon => 'fa-header' })
         elsif elms.empty?
-          page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{Missing <meta name="description">}, :message => %Q{Missing <meta name="description">}, :icon => 'fa-header' })
+          page.errors << OpenStruct.new({ :severity => 'info', :category => 'SEO', :type => '<meta name="description"> tag missing',  :title => %Q{<meta name="description"> tag missing}, :message => %Q{<meta name="description"> tag missing}, :icon => 'fa-header' })
         else
           desc = elms.first['content']
           @descriptions[desc] ||= {}
           @descriptions[desc][page.response.effective_url] = page
           if desc.length < 60
-            page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{<meta name="description"> too short (lines #{elms.first.line})}, :message => %Q{<meta name="description"> too short (< 60 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
+            page.errors << OpenStruct.new({ :severity => 'info', :category => 'SEO', :type => '<meta name="description"> too short',  :title => %Q{<meta name="description"> too short (lines #{elms.first.line})}, :message => %Q{<meta name="description"> too short (< 60 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
           end
           if desc.length > 115
-            page.errors << OpenStruct.new({ :type => 'meta',  :title => %Q{<meta name="description"> too long (lines #{elms.first.line})}, :message => %Q{<meta name="description"> too long (> 115 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
+            page.errors << OpenStruct.new({ :severity => 'info', :category => 'SEO', :type => '<meta name="description"> too long',  :title => %Q{<meta name="description"> too long (lines #{elms.first.line})}, :message => %Q{<meta name="description"> too long (> 115 characters)}, :snippet => elms.first.to_s, :icon => 'fa-header' })
           end
         end
       end

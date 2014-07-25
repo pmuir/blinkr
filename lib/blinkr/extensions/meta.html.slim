@@ -1,4 +1,6 @@
-.h2 Duplicate Descriptions (#{descriptions.length})
+.h2
+  | Duplicate Descriptions 
+  .label.label-primary.pull-right = descriptions.length
 - descriptions.each_with_index do |(description, pages), index|
 
   .panel.panel-danger
@@ -29,7 +31,9 @@
       a id='resources'
       | No duplicate descriptions detected
 
-.h2 Duplicate Titles (#{titles.length})
+.h2 
+  | Duplicate Titles
+  .label.label-primary.pull-right = titles.length
 - titles.each_with_index do |(title, pages), index|
 
   .panel.panel-danger
