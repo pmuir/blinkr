@@ -11,7 +11,7 @@ body
   .container
     h1 Blinkr
     p.lead Blackbox testing for websites
-    h2 Pages
+    h2 Pages (#{blinkr.pages.inject(0) { |sum, (url, page)| sum + page.errors.length } })
     - blinkr.pages.each_with_index do |(url, page), index|
 
       .panel.panel-danger
