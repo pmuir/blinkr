@@ -69,6 +69,8 @@ body
         });
       .spinner.center-block style="padding-top: 2em"
         img src="http://static.jboss.org/www/images/_images_icons_ajax-loader-8.gif"
+      javascript:
+        $( '.spinner' ).hide();
       #pages
         - blinkr.pages.each_with_index do |(url, page), index|
 
@@ -122,7 +124,6 @@ body
 
   javascript:
     $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
-    $( '.spinner' ).hide();
 
     function category() {
       $( "#filters #types input.category[type=checkbox]" ).each( function() {
