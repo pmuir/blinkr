@@ -87,6 +87,8 @@ ignore_fragments: true
 # Control the number of threads used to run phantomjs. By default 8.
 phantomjs_threads: 8
 
+# Export the report to phantomjs
+
 ````
 
 You can specify a custom config file on the command link:
@@ -120,7 +122,8 @@ Blinkr is based around a pipeline. Issues with the pages are *collected*,
 *analysed*, and then passed to the report for *transformation* and rendering.
 Additional sections may *appended* to the report.
 
-To add extensions to blinkr, you need to define a custom pipeline:
+To add extensions to blinkr, you need to define a custom pipeline. The pipeline
+is defined in a ruby file (e.g. `blinkr.rb`)
 
 ````
 require 'acme/spellcheck'
@@ -138,6 +141,13 @@ end
 
 NOTE: You must add the default extensions to a custom pipeline, for them to be
 executed.
+
+The pipeline is defined in `blinkr.yaml`:
+
+````
+# Use a custom pipeline
+pipeline: blinkr.rb
+````
 
 An extension is just a standard Ruby class. It should declare an 
 `initialize(config)` method, and may declare one or more of:

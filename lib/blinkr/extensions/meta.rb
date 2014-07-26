@@ -19,12 +19,12 @@ module Blinkr
       end
 
       def analyze context, typhoeus
-        @descriptions.reject!{ |description, pages| pages.length <= 1 }
-        @titles.reject!{ |title, pages| pages.length <= 1 }
+        context.duplicate_descriptions = @descriptions.reject{ |description, pages| pages.length <= 1 }
+        context.duplicate_titles = @titles.reject{ |title, pages| pages.length <= 1 }
       end
 
       def append context
-        Slim::Template.new(TMPL).render(OpenStruct.new({ :descriptions => @descriptions, :titles => @titles }))
+        Slim::Template.new(TMPL).render(OpenStruct.new({ :descriptions => context.duplicate_descriptions, :titles => context.duplicate_titles }))
       end
 
       private

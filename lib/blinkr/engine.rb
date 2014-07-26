@@ -1,6 +1,4 @@
 require 'nokogiri'
-require 'uri'
-require 'blinkr/cache'
 require 'blinkr/phantomjs_wrapper'
 require 'blinkr/typhoeus_wrapper'
 require 'blinkr/http_utils'
@@ -10,6 +8,19 @@ require 'blinkr/extensions/links'
 require 'blinkr/extensions/javascript'
 require 'blinkr/extensions/resources'
 require 'blinkr/extensions/pipeline'
+require 'json'
+require 'ostruct'
+
+# Monkeypatch OpenStruct
+class OpenStruct
+
+  EXCEPT = [:response, :body, :resource_errors, :javascript_errors]
+  
+  def to_json(*args)
+    to_h.delete_if{ |k, v| EXCEPT.include?(k) }.to_json(*args)
+  end
+
+end
 
 module Blinkr
   class Engine 
@@ -44,6 +55,11 @@ module Blinkr
       analyze context, typhoeus
       puts "Loaded #{page_count} pages using #{browser.name}. Performed #{typhoeus.count} requests using typhoeus."
       context.pages.reject! { |url, page| page.errors.empty? }
+      unless @config.export.nil?
+        File.open(@config.export, 'w') do |file| 
+          file.write(context.to_json)
+        end
+      end
       Blinkr::Report.new(context, self, @config).render
     end
 
