@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Pete Muir"]
   spec.email         = ["pmuir@bleepbleep.org.uk"]
   spec.summary       = %q{A simple broken link checker}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/pmuir/blinkr"
   spec.license       = "Apache-2.0"
 
   spec.files         = `git ls-files`.split($/)
@@ -24,5 +24,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'nokogiri', '~> 1.5'
   spec.add_dependency 'typhoeus', '~> 0.6'
   spec.add_dependency 'slim', '~> 2.0'
-  spec.add_dependency 'parallel', '~> 1.0.0'
+  spec.add_dependency 'parallel', '~> 1.1.0'
 end
