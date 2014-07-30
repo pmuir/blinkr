@@ -36,6 +36,7 @@ module Blinkr
     private
 
     def _process url, limit, max, &block
+      raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       unless @config.skipped? url
         Tempfile.open('blinkr') do|f|
           if system "phantomjs #{SNAP_JS} #{url} #{@config.viewport} #{f.path}"
