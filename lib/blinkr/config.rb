@@ -30,7 +30,9 @@ module Blinkr
     end
 
     def max_page_retrys
-      @max_page_retrys || @max_retrys
+      r = @max_page_retrys || @max_retrys
+      raise "Retrys is null" if r.nil?
+      r
     end
 
     def ignored? url, code, message
