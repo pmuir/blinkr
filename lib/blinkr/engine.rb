@@ -48,7 +48,7 @@ module Blinkr
           collect page
           page_count += 1
         else
-          puts "#{respones.code} #{response.status_message} Unable to load page #{url} #{'(' + response.return_message + ')' unless response.return_message.nil?}"
+          puts "#{response.code} #{response.status_message} Unable to load page #{url} #{'(' + response.return_message + ')' unless response.return_message.nil?}"
         end
       end
       typhoeus.hydra.run if @config.browser == 'typhoeus'
