@@ -47,7 +47,7 @@ module Blinkr
             block.call response, json['resourceErrors'], json['javascriptErrors']
           else
             if limit > 1
-              puts "Loading #{url} via phantomjs (attempt #{max - limit + 2} of #{max})" if verbose
+              puts "Loading #{url} via phantomjs (attempt #{max - limit + 2} of #{max})" if @config.verbose
               _process url, limit - 1, max, &block
             else
               puts "Loading #{url} via phantomjs failed" if @config.verbose
