@@ -129,10 +129,16 @@ module Blinkr
           p.extensions.each do |e|
             extension( e )
           end
+          if @config.verbose
+            puts "Loaded custom pipeline from #{@config.pipeline}"
+            pipeline = @extensions.inject{|memo, v| "#{memo}, #{v}" }
+            puts "Pipeline: #{pipeline}"
+          end
         else
           raise "Cannot find pipeline file #{pipeline_file}"
         end
       else
+        puts "Loaded default pipeline" if @config.verbose
         default_pipeline
       end
     end
