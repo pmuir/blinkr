@@ -17,7 +17,7 @@ module Blinkr
     if single.nil?
       Blinkr::Engine.new(config).run
     else
-      Blinkr::TyphoeusWrapper.new(config).debug(single)
+      Blinkr::TyphoeusWrapper.new(config, OpenStruct.new).debug(single)
     end
   end
 
