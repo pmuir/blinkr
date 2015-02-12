@@ -9,6 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Pete Muir"]
   spec.email         = ["pmuir@bleepbleep.org.uk"]
   spec.summary       = %q{A simple broken link checker}
+  spec.description   = %q{A broken page and link checker for websites. Optionally uses phantomjs to render pages to check resource loading, links created by JS, and report any JS page load errors.}
   spec.homepage      = "https://github.com/pmuir/blinkr"
   spec.license       = "Apache-2.0"
 
@@ -22,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.5"
   spec.add_development_dependency 'rake', '~> 10.3'
   spec.add_dependency 'nokogiri', '~> 1.5'
-  spec.add_dependency 'typhoeus', '~> 0.6'
-  spec.add_dependency 'slim', '~> 2.0'
-  spec.add_dependency 'parallel', '~> 1.1.0'
+  spec.add_dependency 'typhoeus', '~> 0.7'
+  spec.add_dependency 'slim', '~> 3.0'
+  spec.add_dependency 'parallel', '~> 1.3'
 end
