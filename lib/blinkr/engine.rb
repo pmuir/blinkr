@@ -35,7 +35,7 @@ module Blinkr
 
     def run
       context = OpenStruct.new({:pages => {}})
-      typhoeus, browser = TyphoeusWrapper.new(@config, context)
+      browser = TyphoeusWrapper.new(@config, context)
       browser = PhantomJSWrapper.new(@config, context) if @config.browser == 'phantomjs'
       page_count = 0
       browser.process_all(sitemap_locations, @config.max_page_retrys) do |response, resource_errors, javascript_errors|
