@@ -77,6 +77,16 @@ module Blinkr
       end
     end
 
+    def transform_xml page, error, &block
+      default = yield
+      result = exec(:transform_xml, page, error, default)
+      if result.empty?
+        default
+      else
+        result.join
+      end
+    end
+
     def analyze context, typhoeus
       exec :analyze, context, typhoeus
     end

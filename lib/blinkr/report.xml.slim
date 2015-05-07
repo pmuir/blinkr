@@ -1,0 +1,10 @@
+doctype xml
+
+testsuites errors="#{blinkr.error_count}" name="Blinkr"
+  - blinkr.pages.each_with_index do |(url, page), index|
+    testsuite errors="#{page.errors.length}" id="#{url}" name="#{url}"
+      - page.errors.each do |error|
+        == engine.transform_xml page, error do
+          testcase name="#{error.title}"
+            error message="#{error.message}"
+
