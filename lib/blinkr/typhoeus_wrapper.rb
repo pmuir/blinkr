@@ -1,7 +1,6 @@
 require 'typhoeus'
 require 'blinkr/cache'
 require 'blinkr/http_utils'
-require 'daybreak'
 
 module Blinkr
   class TyphoeusWrapper
