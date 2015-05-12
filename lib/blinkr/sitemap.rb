@@ -1,16 +1,17 @@
+require 'open-uri'
 module Blinkr
   module Sitemap
 
     def sitemap_locations
-      open.css('loc').collect { |loc| loc.content }
+      open_sitemap.css('loc').collect { |loc| loc.content }
     end
 
     private
-    
-    def open
+
+    def open_sitemap
       puts "Loading sitemap from #{@config.sitemap}"
       if @config.sitemap =~ URI::regexp
-        Nokogiri::XML(Typhoeus.get(@config.sitemap, followlocation: true).body)
+        Nokogiri::XML(open(@config.sitemap).read)
       else
         Nokogiri::XML(File.open(@config.sitemap))
       end

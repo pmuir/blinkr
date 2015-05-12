@@ -2,8 +2,6 @@ require 'typhoeus'
 require 'ostruct'
 require 'tempfile'
 require 'blinkr/http_utils'
-require 'parallel'
-
 
 module Blinkr
   class PhantomJSWrapper 
@@ -19,14 +17,14 @@ module Blinkr
       @count = 0
     end
 
-    def process_all urls, limit, &block
-      Parallel.each(urls, :in_threads => @config.phantomjs_threads) do |url|
-        process url, limit, &block
+    def process_all urls, limit, opts = {}, &block
+      urls.each do |url|
+        process url, limit, opts, &block
       end
     end
 
-    def process url, limit, &block
-      _process url, limit, limit, &block
+    def process url, limit, opts = {}, &block
+      _process url, limit, limit, opts, &block
     end
 
     def name
@@ -35,7 +33,7 @@ module Blinkr
 
     private
 
-    def _process url, limit, max, &block
+    def _process url, limit, max, opts = {}, &block
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       unless @config.skipped? url
         Tempfile.open('blinkr') do|f|
