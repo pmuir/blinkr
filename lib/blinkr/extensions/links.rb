@@ -32,22 +32,24 @@ module Blinkr
         puts '----------------------'
         processed = 0
         @links.each do |url, metadata|
-          typhoeus.process(url, @config.max_retrys, {:method => :head}) do |resp|
+          typhoeus.process(url, @config.max_retrys, {:method => :head, :followlocation => true}) do |resp|
             puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @config.verbose
-            unless resp.success? || resp.code == 200
+            unless resp.success?
+              response = Typhoeus.get(url, :followlocation => true) # Try a GET if HEAD failed
               metadata.each do |src|
-                code = resp.code.to_i unless resp.code.nil? || resp.code == 0
-                if resp.status_message.nil?
-                  message = resp.return_message
+                detail = nil
+                if response.status_message.nil?
+                  message = response.return_message
                 else
-                  message = resp.status_message
-                  detail = resp.return_message unless resp.return_message == 'No error'
+                  message = response.status_message
+                  detail = response.return_message unless resp.return_message == 'No error'
                 end
                 src[:page].errors << Blinkr::Error.new({:severity => 'danger', :category => 'Resources missing',
                                                         :type => '<a href=""> target cannot be loaded',
                                                         :url => url, :title => "#{url} (line #{src[:line]})",
-                                                        :code => code, :message => message, :detail => detail,
-                                                        :snippet => src[:snippet], :icon => 'fa-bookmark-o'})
+                                                        :code => response.code.to_i, :message => message,
+                                                        :detail => detail, :snippet => src[:snippet],
+                                                        :icon => 'fa-bookmark-o'})
               end
             end
             processed += 1

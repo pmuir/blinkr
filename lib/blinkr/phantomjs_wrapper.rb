@@ -2,6 +2,7 @@ require 'typhoeus'
 require 'ostruct'
 require 'tempfile'
 require 'blinkr/http_utils'
+require 'parallel'
 
 module Blinkr
   class PhantomJSWrapper 
@@ -18,7 +19,7 @@ module Blinkr
     end
 
     def process_all urls, limit, opts = {}, &block
-      urls.each do |url|
+      Parallel.each(urls, :in_threads => Parallel.processor_count * 4) do |url|
         process url, limit, opts, &block
       end
     end
