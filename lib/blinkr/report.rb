@@ -39,6 +39,10 @@ module Blinkr
         file.write(Slim::Template.new(TMPL).render(OpenStruct.new({:blinkr => @context, :engine => @engine,
                                                                    :errors => @context.to_json})))
       end
+      
+      File.open(@config.json_report, 'w') do |file|
+        file.write(@context.to_json)
+      end
       puts "Wrote report to #{@config.report}" if @config.verbose
     end
 
