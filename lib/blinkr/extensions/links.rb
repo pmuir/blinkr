@@ -51,7 +51,7 @@ module Blinkr
               end
             end
             processed += 1
-            puts "Processed #{processed} of #{@links.size}"
+            puts "Processed #{processed} of #{@links.size}" if @config.verbose
           end
         end
         typhoeus.hydra.run

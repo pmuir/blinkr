@@ -35,7 +35,10 @@ module Blinkr
         end
       end
       @context.error_count = @context.severities.reduce(0){ |sum, (severity, metadata)| sum += metadata.count }
-      File.open(@config.report, 'w') { |file| file.write(Slim::Template.new(TMPL).render(OpenStruct.new({ :blinkr => @context, :engine => @engine }))) }
+      File.open(@config.report, 'w') do |file|
+        file.write(Slim::Template.new(TMPL).render(OpenStruct.new({:blinkr => @context, :engine => @engine,
+                                                                   :errors => @context.to_json})))
+      end
       puts "Wrote report to #{@config.report}" if @config.verbose
     end
 

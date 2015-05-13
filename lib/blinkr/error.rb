@@ -14,5 +14,13 @@ module Blinkr
       @url = opts[:url]
       @detail = opts[:detail]
     end
+
+    def to_json(*args)
+      content = {}
+      instance_variables.each do |v|
+        content[v.to_s[1..-1]] = instance_variable_get v
+      end
+      content.to_json
+    end
   end
 end

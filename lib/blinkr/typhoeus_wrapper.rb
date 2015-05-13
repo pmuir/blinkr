@@ -13,7 +13,7 @@ module Blinkr
       # Configure Typhoeus a bit
       Typhoeus::Config.verbose = true if config.vverbose
       Typhoeus::Config.cache = Blinkr::Cache.new
-      @hydra = Typhoeus::Hydra.new
+      @hydra = Typhoeus::Hydra.new(:maxconnects => 10, :max_total_connections => 20)
       @count = 0
       @context = context
     end
@@ -69,7 +69,7 @@ module Blinkr
       unless @config.skipped? url
         req = Typhoeus::Request.new(
             url,
-            opts.merge(:followlocation => true)
+            opts.merge(:followlocation => true, :timeout => 5, :maxconnects => 5,)
         )
         req.on_complete do |resp|
           if retry? resp

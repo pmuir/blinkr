@@ -1,13 +1,12 @@
 doctype html 
 head
   link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
-  script src="http://code.jquery.com/jquery-1.11.0.min.js"
-  script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"
   link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"
   meta name="viewport" content="width=device-width, initial-scale=1"
   title Blinkr
+  script src="http://code.jquery.com/jquery-2.1.4.min.js"
+  script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"
 body
-
   .container
     .row
       h1 Blinkr
@@ -121,8 +120,11 @@ body
 
       - engine.append(blinkr).each do |result|
         == result
-
   javascript:
+    var errors =
+    #{{errors}
+    }
+    ;
     $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
 
     function category() {
@@ -234,5 +236,3 @@ body
       $( ".pages" ).show();
       $( ".spinner" ).hide();
     }
-
-    
