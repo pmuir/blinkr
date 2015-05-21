@@ -1,238 +1,103 @@
-doctype html 
-head
-  link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
-  link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"
-  meta name="viewport" content="width=device-width, initial-scale=1"
-  title Blinkr
-  script src="http://code.jquery.com/jquery-2.1.4.min.js"
-  script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"
-body
-  .container
-    .row
-      h1 Blinkr
-      p.lead Blackbox testing for websites
+doctype html
+html[ng-app="app"]
+  head
+    link[href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"]
+    link[href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"]
+    title
+      | Blinkr
+    meta[content="width=device-width, initial-scale=1" name="viewport"]
+    script[src="http://code.jquery.com/jquery-2.1.4.min.js"]
+    script[src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"]
+    script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0-beta.5/angular.min.js"]
+    javascript:
+      var LOCAL_ERRORS;
+      var STG_ERRORS = "http://www-stg.jboss.org/pr/890/blinkr/2073/errors.json";
+      var blinkr = angular.module('app', []);
+      var data = "#{test}"
+      var test = JSON.parse(data.replace(/&quot;/g,'"'));
 
-      h2 
-        | Pages
-        .label.label-primary.pull-right = blinkr.error_count
-      .panel.panel-default
-        .panel-heading
-          h4
-            a> data-toggle="collapse" href="#filters" id="control-filters"
-              i.fa.fa-caret-square-o-down
-            | Filters
-        .panel-collapse.collapse.in#filters
-          .panel-body
-            form.row
-              .col-md-4#severities
-                .panel.panel-default
-                  .panel-heading
-                    .checkbox
-                      label
-                        input.severities type="checkbox" value="severities" onchange="severities()" checked="true"
-                        | Severity
-                      .label.label-primary< = blinkr.error_count
-                  .panel-body
-                    - blinkr.severities.each do |severity, metadata|
+      blinkr.filter('searchjson', function () {
+        return function (text) {
+
+        }
+      })
+      blinkr.controller('ErrorCtrl', function ($http, $scope) {
+        console.log(test)
+        $scope.results = test;
+
+
+      }); 
+  body
+    div[ng-controller="ErrorCtrl"]
+      .container
+        h1
+          | Blinkr
+        p.lead
+          | Blackbox testing for websites
+        h2
+          | Pages
+        .label.label-primary.pull-right
+          | {{results.error_count}}
+        .panel.panel-default
+          .panel-heading
+            h4
+              a#control-filters[data-toggle="collapse" href="#filters"]
+                i.fa.fa-caret-square-o-down
+              |  Filters
+          #filters.panel-collapse.collapse.in
+            .panel-body
+              form.row
+                #severities.col-md-4
+                  .panel.panel-default
+                    .panel-heading
                       .checkbox
                         label
-                          input.severity type="checkbox" value="severity-#{metadata.id}" onchange="updateSeverities(); filter()" checked="true"
-                          | #{severity.capitalize}
-                        div< class="label label-#{severity}" = metadata.count
-              .col-md-8#types style="padding-left:20px; border-left: 1px solid #ccc;"
-                .row
-                  - blinkr.categories.each do |category, metadata|
+                          input.severities[checked="true" onchange="severities()" type="checkbox" value="severities"]
+                          | Severity
+                        .label.label-primary
+                          | {{results.error_count}}
+                    .panel-body
+                      .checkbox
+                        label
+                          input.severity[checked="true" onchange="updateSeverities(); filter()" type="checkbox" value="severity-danger"]
+                          | Danger
+                        .label.label-danger
+                          | {{results.error_count}}
+                #types.col-md-8[style="padding-left:20px; border-left: 1px solid #ccc;"]
+                  .row
                     .col-md-6
                       .panel.panel-default
                         .panel-heading
                           .checkbox
                             label
-                              input.category type="checkbox" value="category-#{metadata.id}" onchange="category()" checked="true"
-                              | #{category}
-                            - metadata.severities.each do |severity, count|
-                              div< class="label label-#{severity}" = count
+                              input.category[checked="true" onchange="category()" type="checkbox" value="category-0"]
+                              | Resources missing
+                            .label.label-danger
+                              | {{results.error_count}}
                         .panel-body
-                          - metadata.types.each do |type, type_metadata|
-                            .checkbox
-                              label
-                                input.type type="checkbox" value="type-#{metadata.id}-#{type_metadata.id}" onchange="updateCategory(); filter();" checked="true" data-category="category-#{metadata.id}"
-                                | #{type}
-                              - type_metadata.severities.each do |severity, count|
-                                div< class="label label-#{severity}" = count
-      javascript:
-        $('#filters').on('show.bs.collapse', function () {
-          $('a#control-filters').html('<i class="fa fa-caret-square-o-down"></i>');
-        });
-        $('#filters').on('hide.bs.collapse', function () {
-          $('a#control-filters').html('<i class="fa fa-caret-square-o-right"></i>');
-        });
-      .spinner.center-block style="padding-top: 2em"
-        img src="http://static.jboss.org/www/images/_images_icons_ajax-loader-8.gif"
-      javascript:
-        $( '.spinner' ).hide();
-      #pages
-        - blinkr.pages.each_with_index do |(url, page), index|
-
-          div class="page panel panel-#{page.max_severity}"
-            .panel-heading
-              a> data-toggle="collapse" href="#p-#{index}" id="control-p-#{index}"
-                i.fa.fa-caret-square-o-right>
-              ' #{url}
-              a> href="#{url}" target='_blank'
-                i.fa.fa-external-link
-              a href="view-source:#{url}" target='_blank'
-                i.fa.fa-file-code-o
-            .panel-body.collapse id="p-#{index}"
-              ul.list-group
-              - page.errors.each do |error|
-                == engine.transform page, error do
-                  li.list-group-item.error data-ids="type-#{blinkr.categories[error.category].id}-#{blinkr.categories[error.category].types[error.type].id} severity-#{error.severity} category-#{blinkr.categories[error.category].id}"
-                    - unless error.icon.nil?
-                      i class="fa fa-2x #{error.icon} pull-left"
-                    - unless error.code.nil? && error.message.nil?
-                      div class="pull-right label label-#{error.severity}"
-                        - unless error.code.nil?
-                          ' #{error.code}
-                        - unless error.message.nil?
-                          | #{error.message}
-                    div
-                      ' #{error.title}
-                      - if error.url
-                        a href="#{error.url}" target='_blank'
-                          i.fa.fa-external-link
-                      - if error.detail
-                        p= error.detail
-                    - if error.snippet
-                      pre #{error.snippet}
-            javascript:
-              $('#p-#{index}').on('show.bs.collapse', function () {
-                $('a#control-p-#{index}').html('<i class="fa fa-caret-square-o-down"></i>');
-              });
-              $('#p-#{index}').on('hide.bs.collapse', function () {
-                $('a#control-p-#{index}').html('<i class="fa fa-caret-square-o-right"></i>');
-              });
-
-      - if blinkr.pages.length == 0
-        .panel.panel-success
+                          .checkbox
+                            label
+                              input.type[checked="true" data-category="category-0" onchange="updateCategory(); filter();" type="checkbox" value="type-0-0"]
+                              | <a href=""> target cannot be loaded
+                            .label.label-danger
+                              | {{results.error_count}}
+        .page.panel.panel-danger[ng-repeat="(key,val) in results.pages"]
           .panel-heading
-            a id='resources'
-            | No errors detected
-
-      - engine.append(blinkr).each do |result|
-        == result
-  javascript:
-    var errors =
-    #{{errors}
-    }
-    ;
-    $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
-
-    function category() {
-      $( "#filters #types input.category[type=checkbox]" ).each( function() {
-        var category = $( this ).val();
-        var checked = $( this ).prop("checked");
-        $( "#filters #types input.type[type=checkbox][data-category=" + category + "]" ).each( function() {
-          $( this ).prop( "checked", checked );
-        });
-      });
-      filter();
-    }
-
-    function severities() {
-      $( "#filters #severities input.severities[type=checkbox]" ).each( function() {
-        var checked = $( this ).prop("checked");
-        $( "#filters #severities input.severity[type=checkbox]" ).each( function() {
-          $( this ).prop( "checked", checked );
-        });
-      });
-      filter();
-    }
-
-    function updateCategory() {
-      $( "#filters #types input.category[type=checkbox]" ).each( function() {
-        var category = $( this ).val();
-        var checked = 0;
-        var unchecked = 0;
-        $( "#filters #types input.type[type=checkbox][data-category=" + category + "]" ).each( function() {
-          if ( $( this ).prop( "checked" ) ) {
-            checked++;
-          } else {
-            unchecked++;
-          }
-        });
-        if (unchecked == 0) {
-          $( this ).prop( "checked", true );
-        } else {
-          $( this ).prop( "checked", false );
-        }
-      });
-    }
-
-    function updateSeverities() {
-      $( "#filters #severities input.severities[type=checkbox]" ).each( function() {
-        var checked = 0;
-        var unchecked = 0;
-        $( "#filters #severities input.severity[type=checkbox]" ).each( function() {
-          if ( $( this ).prop( "checked" ) ) {
-            checked++;
-          } else {
-            unchecked++;
-          }
-        });
-        if (unchecked == 0) {
-          $( this ).prop( "checked", true );
-        } else {
-          $( this ).prop( "checked", false );
-        }
-      });
-    }
-
-    function filter() {
-      $( ".pages" ).hide();
-      $( ".spinner" ).show();
-      var selectedTypes = [];
-      var selectedSeverities = [];
-      $( "#filters #severities input[type=checkbox]" ).each( function() {
-        if ( $( this ).prop( "checked" ) ) {
-          selectedSeverities.push( $( this ).val() );
-        }
-      });
-      $( "#filters #types input.type[type=checkbox]" ).each( function() {
-        if ( $( this ).prop( "checked" ) ) {
-          selectedTypes.push( $( this ).val() );
-        }
-      });
-      $( "#pages .page" ).each( function() {
-        var count = 0;
-        $( "li.error[data-ids]", this ).each( function() {
-          var showType = false;
-          var showSeverity = false;
-          var ids = $( this ).attr("data-ids");
-          for (i = 0; i < selectedTypes.length; i++) {
-            if (ids.indexOf(selectedTypes[i]) >= 0) {
-              showType = true;
-              continue;
-            }
-          }
-          for (i = 0; i < selectedSeverities.length; i++) {
-            if (ids.indexOf(selectedSeverities[i]) >= 0) {
-              showSeverity = true;
-              continue;
-            }
-          }
-          if (showSeverity && showType) {
-            $( this ).show();
-            count++;
-          } else {
-            $( this ).hide();
-          }
-        });
-        if (count == 0) {
-          $( this ).hide();
-        } else {
-          $( this ).show();
-        }
-      });
-      $( ".pages" ).show();
-      $( ".spinner" ).hide();
-    }
+            a#control-p-0[data-toggle="collapse" href="#p-0"]
+              i.fa.fa-caret-square-o-right
+            |  {{key}} 
+            a[href="{{key}}" target="_blank"]
+              i.fa.fa-external-link
+            a[href="{{key}}" target="_blank"]
+              i.fa.fa-file-code-o
+          #p-0.panel-body.collapse
+            li.list-group-item.error[data-ids="type-0-0 severity-danger category-0" ng-repeat="(error,item) in val.errors"]
+              i.fa.fa-2x.fa-bookmark-o.pull-left
+              .pull-right.label.label-danger
+                | {{item.code}} {{item.message}}
+              div
+                | {{item.title}} 
+                a[href="{{item.title}}" target="_blank"]
+                  i.fa.fa-external-link
+              pre
+                | {{item.snippet}}
