@@ -1,5 +1,6 @@
 require 'slim'
 require 'ostruct'
+require 'blinkr/error'
 
 module Blinkr
   class Report
@@ -21,13 +22,13 @@ module Blinkr
       @context.categories = {}
       @context.types = {}
       @context.pages.each do |url, page|
-        page.max_severity = 'success'
+        page.max_severity = ::Blinkr::SEVERITY.first # :success
         page.errors.each do |error|
-          raise "#{error.severity} not a valid severity. Must be one of #{SEVERITY.join(',')}" unless SEVERITY.include? error.severity
+          raise "#{error.severity} not a valid severity. Must be one of #{::Blinkr::SEVERITY.join(',')}" unless ::Blinkr::SEVERITY.include? error.severity
           raise "#{error.category} must be specified." if error.category.nil?
           @context.severities[error.severity] ||= OpenStruct.new({ :id => error.severity, :count => 0 })
           @context.severities[error.severity].count += 1
-          page.max_severity = error.severity if SEVERITY.index(error.severity) > SEVERITY.index(page.max_severity)
+          page.max_severity = error.severity if ::Blinkr::SEVERITY.index(error.severity) > ::Blinkr::SEVERITY.index(page.max_severity)
           @context.categories[error.category] ||= OpenStruct.new({ :id => @context.categories.length, :count => 0, :severities => Hash.new(0), :types => {} })
           @context.categories[error.category].severities[error.severity] += 1
           @context.categories[error.category].types[error.type] ||= OpenStruct.new({ :id => @context.categories[error.category].types.length, :count => 0, :severities => Hash.new(0) })
@@ -41,10 +42,6 @@ module Blinkr
       end
       puts "Wrote report to #{@config.report}" if @config.verbose
     end
-
-    private 
-    
-    SEVERITY = ['success', 'info', 'warning', 'danger']
 
   end
 end

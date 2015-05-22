@@ -30,12 +30,20 @@ module Blinkr
         puts '----------------------'
         puts " #{@links.length} links to check "
         puts '----------------------'
+        non_internal_links = @links.reject {|k| k.start_with? @config.base_url}
         processed = 0
-        @links.each do |url, metadata|
-          typhoeus.process(url, @config.max_retrys, {:method => :head, :followlocation => true}) do |resp|
+        non_internal_links.each do |url, metadata|
+          # if link start_with? @config.base_url check to see if it's in the sitemap.xml
+          typhoeus.process(url, @config.max_retrys, :method => :head, :followlocation => true) do |resp|
             puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @config.verbose
-            unless resp.success?
-              response = Typhoeus.get(url, :followlocation => true) # Try a GET if HEAD failed
+            if resp.code.to_i < 200 || resp.code.to_i > 300
+              response = resp
+
+              # Try a GET if HEAD failed, I've noticed some HEAD requests will fail but a GET works correctly
+              if response.code.to_i < 200 || resp.code.to_i > 300
+                response = Typhoeus.get(url, :followlocation => true)
+              end
+
               metadata.each do |src|
                 detail = nil
                 if response.status_message.nil?
@@ -44,12 +52,18 @@ module Blinkr
                   message = response.status_message
                   detail = response.return_message unless resp.return_message == 'No error'
                 end
-                src[:page].errors << Blinkr::Error.new({:severity => 'danger', :category => 'Resources missing',
+
+                severity = :danger
+                if response.code.to_i >= 300 && response.code.to_i < 400
+                  severity = :warning
+                end
+                src[:page].errors << Blinkr::Error.new({:severity => severity,
+                                                        :category => 'Resources missing',
                                                         :type => '<a href=""> target cannot be loaded',
                                                         :url => url, :title => "#{url} (line #{src[:line]})",
                                                         :code => response.code.to_i, :message => message,
                                                         :detail => detail, :snippet => src[:snippet],
-                                                        :icon => 'fa-bookmark-o'})
+                                                        :icon => 'fa-bookmark-o'}) unless response.success?
               end
             end
             processed += 1

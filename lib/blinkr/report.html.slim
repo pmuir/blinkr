@@ -121,10 +121,7 @@ body
       - engine.append(blinkr).each do |result|
         == result
   javascript:
-    var errors =
-    #{{errors}
-    }
-    ;
+    var errors = #{{errors}};
     $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
 
     function category() {
