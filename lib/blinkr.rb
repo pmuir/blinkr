@@ -2,6 +2,7 @@ require 'blinkr/version'
 require 'blinkr/engine'
 require 'blinkr/report'
 require 'blinkr/config'
+require 'blinkr/error'
 require 'blinkr/typhoeus_wrapper'
 require 'yaml'
 
