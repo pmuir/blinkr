@@ -1,34 +1,14 @@
 doctype html
-html[ng-app="app"]
+html
   head
+    meta[http-equiv="Content-Type" content="text/html; charset=UTF-8"]
     link[href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"]
     link[href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"]
     title
       | Blinkr
     meta[content="width=device-width, initial-scale=1" name="viewport"]
-    script[src="http://code.jquery.com/jquery-2.1.4.min.js"]
-    script[src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"]
-    script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0-beta.5/angular.min.js"]
-    javascript:
-      var LOCAL_ERRORS;
-      var STG_ERRORS = "http://www-stg.jboss.org/pr/890/blinkr/2073/errors.json";
-      var blinkr = angular.module('app', []);
-      var data = "#{test}"
-      var test = JSON.parse(data.replace(/&quot;/g,'"'));
-
-      blinkr.filter('searchjson', function () {
-        return function (text) {
-
-        }
-      })
-      blinkr.controller('ErrorCtrl', function ($http, $scope) {
-        console.log(test)
-        $scope.results = test;
-
-
-      }); 
-  body
-    div[ng-controller="ErrorCtrl"]
+  body[ng-app="blinkr"]
+    div[ng-controller="ErrorCtrl as error"]
       .container
         h1
           | Blinkr
@@ -36,8 +16,8 @@ html[ng-app="app"]
           | Blackbox testing for websites
         h2
           | Pages
-        .label.label-primary.pull-right
-          | {{results.error_count}}
+        .label.label-default.pull-right
+          | {{error.results.total}}
         .panel.panel-default
           .panel-heading
             h4
@@ -52,17 +32,16 @@ html[ng-app="app"]
                     .panel-heading
                       .checkbox
                         label
-                          input.severities[checked="true" onchange="severities()" type="checkbox" value="severities"]
-                          | Severity
-                        .label.label-primary
-                          | {{results.error_count}}
-                    .panel-body
+                          ' Severity
+                        .label.label-default
+                          ' {{error.results.total}}
+                    .panel-body[ng-repeat="(key, value) in error.results.severity"]
                       .checkbox
                         label
-                          input.severity[checked="true" onchange="updateSeverities(); filter()" type="checkbox" value="severity-danger"]
-                          | Danger
-                        .label.label-danger
-                          | {{results.error_count}}
+                          input.type[checked="true" data-category="{{key}}" type="checkbox"]
+                          ' {{key}}
+                        div[class="label label-{{key}}"]
+                          ' {{value.count}}
                 #types.col-md-8[style="padding-left:20px; border-left: 1px solid #ccc;"]
                   .row
                     .col-md-6
@@ -70,34 +49,57 @@ html[ng-app="app"]
                         .panel-heading
                           .checkbox
                             label
-                              input.category[checked="true" onchange="category()" type="checkbox" value="category-0"]
-                              | Resources missing
-                            .label.label-danger
-                              | {{results.error_count}}
-                        .panel-body
+                              ' Category
+                            .label.label-default
+                              | {{error.results.total}}
+                        .panel-body[ng-repeat="(key, value) in error.results.category"]
                           .checkbox
                             label
-                              input.type[checked="true" data-category="category-0" onchange="updateCategory(); filter();" type="checkbox" value="type-0-0"]
-                              | <a href=""> target cannot be loaded
+                              input.type[checked="true" data-category="{{key}}" type="checkbox"]
+                              | {{key}}
                             .label.label-danger
-                              | {{results.error_count}}
-        .page.panel.panel-danger[ng-repeat="(key,val) in results.pages"]
-          .panel-heading
-            a#control-p-0[data-toggle="collapse" href="#p-0"]
-              i.fa.fa-caret-square-o-right
-            |  {{key}} 
-            a[href="{{key}}" target="_blank"]
-              i.fa.fa-external-link
-            a[href="{{key}}" target="_blank"]
-              i.fa.fa-file-code-o
-          #p-0.panel-body.collapse
-            li.list-group-item.error[data-ids="type-0-0 severity-danger category-0" ng-repeat="(error,item) in val.errors"]
-              i.fa.fa-2x.fa-bookmark-o.pull-left
-              .pull-right.label.label-danger
-                | {{item.code}} {{item.message}}
-              div
-                | {{item.title}} 
-                a[href="{{item.title}}" target="_blank"]
+                              | {{value.count}}
+        .page[ng-repeat="(url,page) in error.results.pages"]
+          div[class="panel panel-{{page.max_severity}}"]
+            .panel-heading
+              .panel-title
+                a[data-toggle="collapse" href="#"]
+                  i.fa.fa-caret-square-o-right
+                |  {{url}}
+                a[href="{{url}}" target="_blank"]
                   i.fa.fa-external-link
-              pre
-                | {{item.snippet}}
+                a[href="{{url}}" target="_blank"]
+                  i.fa.fa-file-code-o
+            .panel-body.collapse.panel-collapse
+              ul
+                li.list-group-item.error[ng-repeat="(i,page_error) in page.errors"]
+                  i.fa.fa-2x.fa-bookmark-o.pull-left
+                  div[class="pull-right label label-{{page_error.severity}}"]
+                    | {{page_error.code}} {{page_error.message}}
+                  div
+                    | {{page_error.title}}
+                    a[href="{{page_error.title}}" target="_blank"]
+                      i.fa.fa-external-link
+                  pre
+                    | {{page_error.snippet}}
+    script[src="http://code.jquery.com/jquery-2.1.4.min.js"]
+    script[src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"]
+    script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"]
+    javascript:
+      var blinkr = angular.module('blinkr', []);
+      blinkr.controller("ErrorCtrl", function () {
+        var vm = this;
+        vm.results =
+        #{{errors}
+      };
+      })
+      ;
+
+      angular.element(document).ready(function () {
+        $('.panel-title').find('a[data-toggle=collapse]').on('click', function (e) {
+          e.preventDefault();
+          var target = $(this).parents('.panel').find('.panel-collapse');
+          target.collapse('toggle');
+        });
+        $('.page').find('panel-collapse').collapse({toggle: false});
+      });
