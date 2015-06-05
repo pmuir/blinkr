@@ -1,5 +1,5 @@
 doctype html
-html
+html[ng-app="blinkr"]
   head
     meta[http-equiv="Content-Type" content="text/html; charset=UTF-8"]
     link[href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"]
@@ -7,8 +7,8 @@ html
     title
       | Blinkr
     meta[content="width=device-width, initial-scale=1" name="viewport"]
-  body[ng-app="blinkr"]
-    div[ng-controller="ErrorCtrl as error"]
+  body
+    div[ng-controller="ErrorCtrl"]
       .container
         h1
           | Blinkr
@@ -17,7 +17,7 @@ html
         h2
           | Pages
         .label.label-default.pull-right
-          | {{error.results.total}}
+          | {{report.total}}
         .panel.panel-default
           .panel-heading
             h4
@@ -34,11 +34,11 @@ html
                         label
                           ' Severity
                         .label.label-default
-                          ' {{error.results.total}}
-                    .panel-body[ng-repeat="(key, value) in error.results.severity"]
+                          ' {{report.total}}
+                    .panel-body[ng-repeat="(key, value) in severities"]
                       .checkbox
                         label
-                          input.type[checked="true" data-category="{{key}}" type="checkbox"]
+                          input.type[ng-model="severities[key].enabled" type="checkbox"]
                           ' {{key}}
                         div[class="label label-{{key}}"]
                           ' {{value.count}}
@@ -51,15 +51,15 @@ html
                             label
                               ' Category
                             .label.label-default
-                              | {{error.results.total}}
-                        .panel-body[ng-repeat="(key, value) in error.results.category"]
+                              | {{report.total}}
+                        .panel-body[ng-repeat="(key, value) in categories"]
                           .checkbox
                             label
-                              input.type[checked="true" data-category="{{key}}" type="checkbox"]
+                              input.type[ng-model="categories[key].enabled" type="checkbox"]
                               | {{key}}
                             .label.label-danger
                               | {{value.count}}
-        .page[ng-repeat="(url,page) in error.results.pages"]
+        .page[ng-repeat="(url,page) in report.pages | showPage:categories:severities"]
           div[class="panel panel-{{page.max_severity}}"]
             .panel-heading
               .panel-title
@@ -72,7 +72,7 @@ html
                   i.fa.fa-file-code-o
             .panel-body.collapse.panel-collapse
               ul
-                li.list-group-item.error[ng-repeat="(i,page_error) in page.errors"]
+                li.list-group-item.error[ng-repeat="(i,page_error) in page.errors | displayError:categories:severities:page_error"]
                   i.fa.fa-2x.fa-bookmark-o.pull-left
                   div[class="pull-right label label-{{page_error.severity}}"]
                     | {{page_error.code}} {{page_error.message}}
@@ -87,17 +87,66 @@ html
     script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"]
     javascript:
       var blinkr = angular.module('blinkr', []);
-      blinkr.controller("ErrorCtrl", function () {
-        var vm = this;
-        vm.results = #{{errors}};
+      blinkr.factory('report', function reportFactory() {
+        return
+        #{{errors}
+      };
       })
       ;
 
-      angular.element(document).ready(function () {
+      blinkr.controller("ErrorCtrl", ['$scope', 'report', function ($scope, report) {
+        $scope.report = report;
+        $scope.severities = {};
+        $scope.categories = {};
+        $scope.report = report;
+        window.scope = $scope;
+
+        Object.keys($scope.report.severity).forEach(function (s) {
+          $scope.severities[s] = {enabled: true, count: report.severity[s].count};
+        });
+
+        Object.keys($scope.report.category).forEach(function (c) {
+          $scope.categories[c] = {enabled: true, count: report.category[c].count};
+        });
+      }]);
+
+      blinkr.filter('displayError', function () {
+        return function (errors, categories, severities) {
+          var returned_errors = [];
+          errors.forEach(function (error) {
+            if (categories[error.category].enabled && severities[error.severity].enabled) {
+              returned_errors.push(error);
+            }
+          });
+          return returned_errors;
+        }
+      });
+
+      blinkr.filter('showPage', function () {
+        return function (all_pages, categories, severities) {
+          var pages = {};
+          Object.keys(all_pages).forEach(function (url) {
+            var page = all_pages[url];
+            page.errors.forEach(function (error) {
+              if (categories[error.category].enabled || severities[error.severity].enabled) {
+                pages[url] = all_pages[url];
+              }
+            });
+          });
+          panelBind();
+          return pages;
+        }
+      });
+
+      window.panelBind = function () {
         $('.panel-title').find('a[data-toggle=collapse]').on('click', function (e) {
           e.preventDefault();
           var target = $(this).parents('.panel').find('.panel-collapse');
           target.collapse('toggle');
         });
         $('.page').find('panel-collapse').collapse({toggle: false});
+      };
+
+      angular.element(document).ready(function () {
+        panelBind();
       });
