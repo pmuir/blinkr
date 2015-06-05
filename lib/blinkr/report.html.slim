@@ -103,11 +103,8 @@ html[ng-app="blinkr"]
     javascript:
       var blinkr = angular.module('blinkr', []);
       blinkr.factory('report', function reportFactory() {
-        return
-        #{{errors}
-      };
-      })
-      ;
+        return #{{errors}};
+      });
 
       blinkr.controller("ErrorCtrl", ['$scope', 'report', function ($scope, report) {
         $scope.report = report;
@@ -119,15 +116,15 @@ html[ng-app="blinkr"]
         window.scope = $scope;
 
         Object.keys($scope.report.severity).forEach(function (s) {
-          $scope.severities[s] = {enabled: true, count: report.severity[s].count};
+          $scope.severities[s] = {enabled: false, count: report.severity[s].count};
         });
 
         Object.keys($scope.report.category).forEach(function (c) {
-          $scope.categories[c] = {enabled: true, count: report.category[c].count};
+          $scope.categories[c] = {enabled: false, count: report.category[c].count};
         });
 
         Object.keys($scope.report.type).forEach(function (t) {
-          $scope.types[t] = {enabled: true, count: report.type[t].count};
+          $scope.types[t] = {enabled: false, count: report.type[t].count};
         });
       }]);
 

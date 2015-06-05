@@ -1,3 +1,4 @@
+require 'uri'
 require 'blinkr/error'
 require 'blinkr/http_utils'
 
@@ -67,10 +68,28 @@ module Blinkr
               end
             end
             processed += 1
-            puts "Processed #{processed} of #{@links.size}" if @config.verbose
+            puts "Processed #{processed} of #{non_internal_links.size}" if @config.verbose
           end
         end
         typhoeus.hydra.run
+        @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
+          link = URI.parse(url)
+          link.fragment = nil
+          link.query = nil
+          unless context.pages.keys.include?(link.to_s) || context.pages.keys.include?((link.to_s + '/'))
+            locations.each do |location|
+              location[:page].errors << Blinkr::Error.new({:severity => :warning,
+                                                           :category => 'Resource missing from sitemap',
+                                                           :type => '<a href=""> target missing from sitemap',
+                                                           :url => url, :title => "#{url} (line #{location[:line]})",
+                                                           :code => nil,
+                                                           :message => 'Missing from sitemap', :detail => nil,
+                                                           :snippet => location[:snippet],
+                                                           :icon => 'fa-bookmark-o'
+                                                          })
+            end
+          end
+        end
       end
 
     end
