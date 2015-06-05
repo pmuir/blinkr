@@ -22,6 +22,7 @@ module Blinkr
       @context.total = 0
       @context.severity = {}
       @context.category = {}
+      @context.type = {}
       @context.pages.each do |_, page|
         page.max_severity = ::Blinkr::SEVERITY.first # :success
         page.errors.each do |error|
@@ -31,10 +32,10 @@ module Blinkr
           @context.severity[error.severity] ||= OpenStruct.new({:count => 0})
           @context.severity[error.severity].count += 1
           page.max_severity = error.severity if ::Blinkr::SEVERITY.index(error.severity) > ::Blinkr::SEVERITY.index(page.max_severity)
-          @context.category[error.category] ||= OpenStruct.new({:count => 0, :types => {}})
+          @context.category[error.category] ||= OpenStruct.new({:count => 0})
           @context.category[error.category].count += 1
-          @context.category[error.category].types[error.type] ||= OpenStruct.new({:count => 0})
-          @context.category[error.category].types[error.type].count += 1
+          @context.type[error.type] ||= OpenStruct.new({:count => 0})
+          @context.type[error.type].count += 1
         end
       end
       File.open(@config.report, 'w') do |file|
