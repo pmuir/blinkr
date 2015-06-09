@@ -9,7 +9,11 @@ module Blinkr
     end
 
     def set(request, response)
-      @memory[request] = response unless response.timed_out?
+      if request.is_a? String # HACK for caching resource and js errors
+        @memory[request] = response
+      else
+        @memory[request] = response unless response.timed_out?
+      end
     end
 
     def size
