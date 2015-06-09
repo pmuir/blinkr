@@ -21,7 +21,7 @@ module Blinkr
     end
 
     def process_all urls, limit, opts = {}, &block
-      Parallel.each(urls, :in_threads => Parallel.processor_count * 4) do |url|
+      Parallel.each(urls, :in_threads => (@config.phantomjs_threads || Parallel.processor_count * 2)) do |url|
         process url, limit, opts, &block
       end
     end
