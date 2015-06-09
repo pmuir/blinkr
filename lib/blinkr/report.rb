@@ -43,9 +43,6 @@ module Blinkr
                                                                    :errors => @context.to_json})))
       end
       
-      # File.open(@config.json_report, 'w') do |file|
-      #   file.write(@context.to_json)
-      # end
       puts "Wrote report to #{@config.report}" if @config.verbose
     end
 
