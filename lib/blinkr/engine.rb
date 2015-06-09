@@ -37,7 +37,7 @@ module Blinkr
 
     def run
       context = OpenStruct.new({:pages => {}})
-      browser = TyphoeusWrapper.new(@config, context)
+      typhoeus = browser = TyphoeusWrapper.new(@config, context)
       browser = PhantomJSWrapper.new(@config, context) if @config.browser == 'phantomjs'
       page_count = 0
       urls = sitemap_locations.uniq
@@ -62,7 +62,7 @@ module Blinkr
       browser.hydra.run if @config.browser == 'typhoeus'
       puts "Loaded #{page_count} pages using #{browser.name}."
       puts 'Analyzing pages'
-      analyze context, TyphoeusWrapper.new(@config, context)
+      analyze context, typhoeus
       context.pages.reject! { |_, page| page.errors.empty? }
 
       unless @config.export.nil?
