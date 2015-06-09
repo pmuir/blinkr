@@ -65,7 +65,9 @@ module Blinkr
       analyze context, TyphoeusWrapper.new(@config, context)
       context.pages.reject! { |_, page| page.errors.empty? }
 
-      FileUtils.mkdir_p Pathname.new(@config.report).parent
+      unless @config.export.nil?
+        FileUtils.mkdir_p Pathname.new(@config.report).parent
+      end
       Blinkr::Report.new(context, self, @config).render
     end
 
