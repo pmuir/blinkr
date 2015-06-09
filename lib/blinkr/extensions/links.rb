@@ -27,7 +27,7 @@ module Blinkr
         end
       end
 
-      def analyze(context, typhoeus)
+      def analyze(context, browser)
         puts '----------------------'
         puts " #{@links.length} links to check "
         puts '----------------------'
@@ -35,15 +35,10 @@ module Blinkr
         processed = 0
         non_internal_links.each do |url, metadata|
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
-          typhoeus.process(url, @config.max_retrys, :method => :head, :followlocation => true) do |resp|
-            puts "Loaded #{url} via typhoeus #{'(cached)' if resp.cached?}" if @config.verbose
+          browser.process(url, @config.max_retrys, :method => :get, :followlocation => true) do |resp|
+            puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
             if resp.code.to_i < 200 || resp.code.to_i > 300
               response = resp
-
-              # Try a GET if HEAD failed, I've noticed some HEAD requests will fail but a GET works correctly
-              if response.code.to_i < 200 || resp.code.to_i > 300
-                response = Typhoeus.get(url, :followlocation => true)
-              end
 
               metadata.each do |src|
                 detail = nil
@@ -71,7 +66,7 @@ module Blinkr
             puts "Processed #{processed} of #{non_internal_links.size}" if @config.verbose
           end
         end
-        typhoeus.hydra.run
+        browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper
         @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
           link = URI.parse(url)
           link.fragment = nil
