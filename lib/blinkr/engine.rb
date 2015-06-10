@@ -37,7 +37,12 @@ module Blinkr
 
     def run
       context = OpenStruct.new({:pages => {}})
-      typhoeus = browser = TyphoeusWrapper.new(@config, context)
+      if defined?(JRUBY_VERSION) && @config.browser == 'manticore'
+        require 'blinkr/manticore_wrapper'
+        bulk_browser = browser = ManticoreWrapper.new(@config, context)
+      else
+        bulk_browser = browser = TyphoeusWrapper.new(@config, context)
+      end
       browser = PhantomJSWrapper.new(@config, context) if @config.browser == 'phantomjs'
       page_count = 0
       urls = sitemap_locations.uniq
@@ -59,10 +64,10 @@ module Blinkr
         end
       end
       puts 'Executing Typhoeus::Hydra.run, this could take awhile' if @config.browser == 'typhoeus'
-      browser.hydra.run if @config.browser == 'typhoeus'
+      # browser.hydra.run if @config.browser == 'typhoeus'
       puts "Loaded #{page_count} pages using #{browser.name}."
       puts 'Analyzing pages'
-      analyze context, typhoeus
+      analyze context, bulk_browser
       context.pages.reject! { |_, page| page.errors.empty? }
 
       unless @config.export.nil?

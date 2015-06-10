@@ -24,6 +24,7 @@ module Blinkr
       urls.each do |url|
         process url, limit, opts, &block
       end
+      @hydra.run
     end
 
     def process(url, limit, opts = {}, &block)
