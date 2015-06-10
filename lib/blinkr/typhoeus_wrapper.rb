@@ -80,7 +80,8 @@ module Blinkr
               _process(url, limit - 1, max, &Proc.new)
             else
               puts "Loading #{url} via typhoeus failed" if @config.verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
+              response = Typhoeus::Response.new(:code => 0, :status_message => "Server timed out after #{max} retries",
+                                                :mock => true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               block.call response, nil, nil

@@ -48,7 +48,8 @@ module Blinkr
 
           if system "phantomjs #{SNAP_JS} #{url} #{@config.viewport} #{f.path}"
             json = JSON.load(File.read(f.path))
-            response = Typhoeus::Response.new(code: 200, body: json['content'], effective_url: json['url'], mock: true)
+            response = Typhoeus::Response.new(:code => 200, :body => json['content'], :effective_url => json['url'],
+                                              :mock => true)
             response.request = Typhoeus::Request.new(url)
             Typhoeus.stub(url).and_return(response)
             @cache.set(response.request, response)
@@ -61,7 +62,8 @@ module Blinkr
               _process url, limit - 1, max, &block
             else
               puts "Loading #{url} via phantomjs failed" if @config.verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
+              response = Typhoeus::Response.new(:code => 0, :status_message => "Server timed out after #{max} retries",
+                                                :mock => true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               @cache.set(response.request, response)
