@@ -33,6 +33,28 @@ module Blinkr
         puts '----------------------'
         non_internal_links = @links.reject {|k| k.start_with? @config.base_url}
         processed = 0
+        # Find the internal links
+        @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
+          link = URI.parse(url)
+          link.fragment = nil
+          link.query = nil
+          unless context.pages.keys.include?(link.to_s) || context.pages.keys.include?((link.to_s + '/'))
+            locations.each do |location|
+              location[:page].errors << Blinkr::Error.new({:severity => :warning,
+                                                           :category => 'Resource missing from sitemap',
+                                                           :type => '<a href=""> target missing from sitemap',
+                                                           :url => url, :title => "#{url} (line #{location[:line]})",
+                                                           :code => nil,
+                                                           :message => 'Missing from sitemap',
+                                                           :detail => 'Checked with Typheous',
+                                                           :snippet => location[:snippet],
+                                                           :icon => 'fa-bookmark-o'
+                                                          })
+              # It wasn't in the sitemap, so we'll add it to the "non_internal_links" to still be checked
+              non_internal_links[url] = locations
+            end
+          end
+        end
         non_internal_links.each do |url, metadata|
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
           browser.process(url, @config.max_retrys, :method => :get, :followlocation => true) do |resp|
@@ -54,12 +76,12 @@ module Blinkr
                   severity = :warning
                 end
                 src[:page].errors << Blinkr::Error.new({:severity => severity,
-                                                        :category => 'Resources missing',
-                                                        :type => '<a href=""> target cannot be loaded',
-                                                        :url => url, :title => "#{url} (line #{src[:line]})",
-                                                        :code => response.code.to_i, :message => message,
-                                                        :detail => detail, :snippet => src[:snippet],
-                                                        :icon => 'fa-bookmark-o'}) unless response.success?
+                :category => 'Resources missing',
+                :type => '<a href=""> target cannot be loaded',
+                :url => url, :title => "#{url} (line #{src[:line]})",
+                :code => response.code.to_i, :message => message,
+                :detail => detail, :snippet => src[:snippet],
+                :icon => 'fa-bookmark-o'}) unless response.success?
               end
             end
             processed += 1
@@ -67,24 +89,6 @@ module Blinkr
           end
         end
         browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper
-        @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
-          link = URI.parse(url)
-          link.fragment = nil
-          link.query = nil
-          unless context.pages.keys.include?(link.to_s) || context.pages.keys.include?((link.to_s + '/'))
-            locations.each do |location|
-              location[:page].errors << Blinkr::Error.new({:severity => :warning,
-                                                           :category => 'Resource missing from sitemap',
-                                                           :type => '<a href=""> target missing from sitemap',
-                                                           :url => url, :title => "#{url} (line #{location[:line]})",
-                                                           :code => nil,
-                                                           :message => 'Missing from sitemap', :detail => nil,
-                                                           :snippet => location[:snippet],
-                                                           :icon => 'fa-bookmark-o'
-                                                          })
-            end
-          end
-        end
       end
 
     end
