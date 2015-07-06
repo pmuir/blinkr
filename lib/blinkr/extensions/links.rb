@@ -31,7 +31,7 @@ module Blinkr
         puts '----------------------'
         puts " #{@links.length} links to check "
         puts '----------------------'
-        non_internal_links = @links.reject {|k| k.start_with? @config.base_url}
+        external_links = @links.reject { |k| k.start_with? @config.base_url }
         processed = 0
         # Find the internal links
         @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
@@ -50,12 +50,12 @@ module Blinkr
                                                            :snippet => location[:snippet],
                                                            :icon => 'fa-bookmark-o'
                                                           })
-              # It wasn't in the sitemap, so we'll add it to the "non_internal_links" to still be checked
-              non_internal_links[url] = locations
+              # It wasn't in the sitemap, so we'll add it to the "external_links" to still be checked
+              external_links[url] = locations
             end
           end
         end
-        non_internal_links.each do |url, metadata|
+        external_links.each do |url, metadata|
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
           browser.process(url, @config.max_retrys, :method => :get, :followlocation => true) do |resp|
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
@@ -85,7 +85,7 @@ module Blinkr
               end
             end
             processed += 1
-            puts "Processed #{processed} of #{non_internal_links.size}" if @config.verbose
+            puts "Processed #{processed} of #{external_links.size}" if @config.verbose
           end
         end
         browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper
