@@ -9,6 +9,8 @@ require 'blinkr/extensions/javascript'
 require 'blinkr/extensions/resources'
 require 'blinkr/extensions/pipeline'
 require 'json'
+require 'pathname'
+require 'fileutils'
 require 'ostruct'
 
 # Monkeypatch OpenStruct
@@ -27,7 +29,7 @@ module Blinkr
     include HttpUtils
     include Sitemap
 
-    def initialize config
+    def initialize(config)
       @config = config.validate
       @extensions = []
       load_pipeline
@@ -35,15 +37,25 @@ module Blinkr
 
     def run
       context = OpenStruct.new({:pages => {}})
-      browser = TyphoeusWrapper.new(@config, context)
+      if defined?(JRUBY_VERSION) && @config.browser == 'manticore'
+        require 'blinkr/manticore_wrapper'
+        bulk_browser = browser = ManticoreWrapper.new(@config, context)
+      else
+        bulk_browser = browser = TyphoeusWrapper.new(@config, context)
+      end
       browser = PhantomJSWrapper.new(@config, context) if @config.browser == 'phantomjs'
       page_count = 0
-      browser.process_all(sitemap_locations, @config.max_page_retrys) do |response, resource_errors, javascript_errors|
+      urls = sitemap_locations.uniq
+      puts "Fetching #{urls.size} pages from sitemap"
+      browser.process_all(urls, @config.max_page_retrys) do |response, resource_errors, javascript_errors|
+        url = response.request.base_url
         if response.success?
-          url = response.request.base_url
           puts "Loaded page #{url}" if @config.verbose
           body = Nokogiri::HTML(response.body)
-          page = OpenStruct.new({ :response => response, :body => body, :errors => ErrorArray.new(@config), :resource_errors => resource_errors || [], :javascript_errors => javascript_errors || [] })
+          page = OpenStruct.new({:response => response, :body => body.freeze,
+                                 :errors => ErrorArray.new(@config),
+                                 :resource_errors => resource_errors || [],
+                                 :javascript_errors => javascript_errors || []})
           context.pages[url] = page
           collect page
           page_count += 1
@@ -51,25 +63,26 @@ module Blinkr
           puts "#{response.code} #{response.status_message} Unable to load page #{url} #{'(' + response.return_message + ')' unless response.return_message.nil?}"
         end
       end
-      typhoeus.hydra.run if @config.browser == 'typhoeus'
-      analyze context, typhoeus
-      puts "Loaded #{page_count} pages using #{browser.name}. Performed #{typhoeus.count} requests using typhoeus."
-      context.pages.reject! { |url, page| page.errors.empty? }
+      puts 'Executing Typhoeus::Hydra.run, this could take awhile' if @config.browser == 'typhoeus'
+      # browser.hydra.run if @config.browser == 'typhoeus'
+      puts "Loaded #{page_count} pages using #{browser.name}."
+      puts 'Analyzing pages'
+      analyze context, bulk_browser
+      context.pages.reject! { |_, page| page.errors.empty? }
+
       unless @config.export.nil?
-        File.open(@config.export, 'w') do |file| 
-          file.write(context.to_json)
-        end
+        FileUtils.mkdir_p Pathname.new(@config.report).parent
       end
       Blinkr::Report.new(context, self, @config).render
     end
 
-    def append context
-      exec :append, context
+    def append(context)
+      execute :append, context
     end
-      
-    def transform page, error, &block
+
+    def transform(page, error, &block)
       default = yield
-      result = exec(:transform, page, error, default)
+      result = execute(:transform, page, error, default)
       if result.empty?
         default
       else
@@ -77,33 +90,33 @@ module Blinkr
       end
     end
 
-    def analyze context, typhoeus
-      exec :analyze, context, typhoeus
+    def analyze(context, typhoeus)
+      execute :analyze, context, typhoeus
     end
 
-    def collect page
-      exec :collect, page
+    def collect(page)
+      execute :collect, page
     end
 
     private
 
     class ErrorArray < Array
 
-      def initialize config
+      def initialize(config)
         @config = config
       end
 
-      def << error
-        unless @config.ignored?(error.url, error.code, error.message)
-          super
-        else
+      def <<(error)
+        if @config.ignored?(error.url, error.code, error.message)
           self
+        else
+          super
         end
       end
 
     end
 
-    def extension ext
+    def extension(ext)
       @extensions << ext
     end
 
@@ -113,7 +126,7 @@ module Blinkr
       extension Blinkr::Extensions::Resources.new @config
     end
 
-    def exec method, *args
+    def execute(method, *args)
       result = []
       @extensions.each do |e|
         result << e.send(method, *args) if e.respond_to? method
@@ -122,24 +135,24 @@ module Blinkr
     end
 
     def load_pipeline
-      unless @config.pipeline.nil?
+      if @config.pipeline.nil?
+        puts 'Loaded default pipeline' if @config.verbose
+        default_pipeline
+      else
         pipeline_file = File.join(File.dirname(@config.config_file), @config.pipeline)
-        if  File.exists?( pipeline_file )
-          p = eval(File.read( pipeline_file ), nil, pipeline_file, 1).load @config
+        if File.exists?(pipeline_file)
+          p = eval(File.read(pipeline_file), nil, pipeline_file, 1).load @config
           p.extensions.each do |e|
-            extension( e )
+            extension(e)
           end
           if @config.verbose
             puts "Loaded custom pipeline from #{@config.pipeline}"
-            pipeline = @extensions.inject{|memo, v| "#{memo}, #{v}" }
+            pipeline = @extensions.inject { |memo, v| "#{memo}, #{v}" }
             puts "Pipeline: #{pipeline}"
           end
         else
           raise "Cannot find pipeline file #{pipeline_file}"
         end
-      else
-        puts "Loaded default pipeline" if @config.verbose
-        default_pipeline
       end
     end
 

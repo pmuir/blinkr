@@ -2,12 +2,13 @@ require 'blinkr/version'
 require 'blinkr/engine'
 require 'blinkr/report'
 require 'blinkr/config'
+require 'blinkr/error'
 require 'blinkr/typhoeus_wrapper'
 require 'yaml'
 
 module Blinkr
   def self.run(base_url, config = 'blinkr.yaml', single, verbose, vverbose)
-    args = { :base_url => base_url, :verbose => verbose, :vverbose => vverbose }
+    args = {:base_url => base_url, :verbose => verbose, :vverbose => vverbose}
     if !config.nil? && File.exists?(config)
       config = Blinkr::Config.read config, args
     else

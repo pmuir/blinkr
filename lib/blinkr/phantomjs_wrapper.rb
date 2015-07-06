@@ -2,8 +2,8 @@ require 'typhoeus'
 require 'ostruct'
 require 'tempfile'
 require 'blinkr/http_utils'
+require 'blinkr/cache'
 require 'parallel'
-
 
 module Blinkr
   class PhantomJSWrapper 
@@ -17,16 +17,17 @@ module Blinkr
       @config = config.validate
       @context = context
       @count = 0
+      @cache = Blinkr::Cache.new
     end
 
-    def process_all urls, limit, &block
-      Parallel.each(urls, :in_threads => @config.phantomjs_threads) do |url|
-        process url, limit, &block
+    def process_all urls, limit, opts = {}, &block
+      Parallel.each(urls, :in_threads => (@config.phantomjs_threads || Parallel.processor_count * 2)) do |url|
+        process url, limit, opts, &block
       end
     end
 
-    def process url, limit, &block
-      _process url, limit, limit, &block
+    def process url, limit, opts = {}, &block
+      _process url, limit, limit, opts, &block
     end
 
     def name
@@ -35,15 +36,25 @@ module Blinkr
 
     private
 
-    def _process url, limit, max, &block
+    def _process url, limit, max, opts = {}, &block
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       unless @config.skipped? url
         Tempfile.open('blinkr') do|f|
+          # Try and sidestep any unnecessary requests by checking the cache
+          request = Typhoeus::Request.new(url)
+          if @cache.get(request)
+            return block.call response, @cache.get("#{url}-resourceErrors"), @cache.get("#{url}-javascriptErrors")
+          end
+
           if system "phantomjs #{SNAP_JS} #{url} #{@config.viewport} #{f.path}"
             json = JSON.load(File.read(f.path))
-            response = Typhoeus::Response.new(code: 200, body: json['content'], effective_url: json['url'], mock: true)
+            response = Typhoeus::Response.new(:code => 200, :body => json['content'], :effective_url => json['url'],
+                                              :mock => true)
             response.request = Typhoeus::Request.new(url)
             Typhoeus.stub(url).and_return(response)
+            @cache.set(response.request, response)
+            @cache.set("#{url}-resourceErrors", json['resourceErrors'])
+            @cache.set("#{url}-javascriptErrors", json['javascriptErrors'])
             block.call response, json['resourceErrors'], json['javascriptErrors']
           else
             if limit > 1
@@ -51,9 +62,11 @@ module Blinkr
               _process url, limit - 1, max, &block
             else
               puts "Loading #{url} via phantomjs failed" if @config.verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
+              response = Typhoeus::Response.new(:code => 0, :status_message => "Server timed out after #{max} retries",
+                                                :mock => true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
+              @cache.set(response.request, response)
               block.call response, nil, nil
             end
           end

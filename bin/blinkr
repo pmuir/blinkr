@@ -22,6 +22,7 @@ OptionParser.new do |opts|
   end
   opts.on("-s", "--single-url URL", "test a single URL, outputting the response to the console") do |opt|
     options[:single_url] = opt
+    options[:base_url] = opt
   end
 end.parse!
 

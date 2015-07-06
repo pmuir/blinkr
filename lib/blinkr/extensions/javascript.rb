@@ -1,3 +1,5 @@
+require 'blinkr/error'
+
 module Blinkr
   module Extensions
     class JavaScript
@@ -8,7 +10,9 @@ module Blinkr
 
       def collect page
         page.javascript_errors.each do |error|
-          page.errors << OpenStruct.new({ :severity => 'danger', :category => 'JavaScript', :type => 'JavaScript error', :title => error['msg'], :snippet => error['trace'], :icon => 'fa-gears' })
+          page.errors << Blinkr::Error.new(:severity => 'danger', :category => 'JavaScript',
+                                           :type => 'JavaScript error', :title => error['msg'],
+                                           :snippet => error['trace'], :icon => 'fa-gears')
         end
       end
 

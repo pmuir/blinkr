@@ -1,6 +1,3 @@
-require 'typhoeus/request'
-require 'typhoeus/response'
-require 'typhoeus/hydra'
 require 'typhoeus'
 require 'blinkr/cache'
 require 'blinkr/http_utils'
@@ -11,24 +8,30 @@ module Blinkr
 
     attr_reader :count, :hydra
 
-    def initialize config, context
+    def initialize(config, context)
       @config = config.validate
-      @hydra = Typhoeus::Hydra.new(max_concurrency: 200)      
+      # Configure Typhoeus a bit
+      Typhoeus::Config.verbose = true if config.vverbose
+      Typhoeus::Config.cache = Blinkr::Cache.new
+      @hydra = Typhoeus::Hydra.new(:maxconnects => (@config.maxconnects || 30),
+                                   :max_total_connections => (@config.maxconnects || 30),
+                                   :max_concurrency => (@config.maxconnects || 30))
       @count = 0
       @context = context
     end
 
-    def process_all urls, limit, &block
+    def process_all(urls, limit, opts = {}, &block)
       urls.each do |url|
-        process url, limit, &block
+        process url, limit, opts, &block
       end
+      @hydra.run
     end
 
-    def process url, limit, &block
-      _process url, limit, limit, &block
+    def process(url, limit, opts = {}, &block)
+      _process url, limit, limit, opts, &block
     end
 
-    def debug url
+    def debug(url)
       process(url, @config.max_retrys) do |resp|
         puts "\n++++++++++"
         puts "+ Blinkr +"
@@ -65,21 +68,21 @@ module Blinkr
 
     private
 
-    def _process url, limit, max, &block
+    def _process(url, limit, max, opts = {}, &block)
       unless @config.skipped? url
         req = Typhoeus::Request.new(
-          url,
-          followlocation: true,
-          verbose: @config.vverbose
+            url,
+            opts.merge(:followlocation => true)
         )
         req.on_complete do |resp|
           if retry? resp
-            if limit > 1 
+            if limit > 1
               puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @config.verbose
               _process(url, limit - 1, max, &Proc.new)
             else
               puts "Loading #{url} via typhoeus failed" if @config.verbose
-              response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries", mock: true)
+              response = Typhoeus::Response.new(:code => 0, :status_message => "Server timed out after #{max} retries",
+                                                :mock => true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
               block.call response, nil, nil
