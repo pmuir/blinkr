@@ -128,7 +128,7 @@ module Blinkr
 
     def execute(method, *args)
       result = []
-      @extensions.each do |e|
+      Parallel.each(@extensions, :in_threads => Parallel.processor_count * 3) do |e|
         result << e.send(method, *args) if e.respond_to? method
       end
       result
