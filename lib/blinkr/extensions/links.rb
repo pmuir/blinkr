@@ -56,7 +56,7 @@ module Blinkr
           end
         end
         puts "Ready to process external links" if @config.verbose
-        browser.process_all(external_links.keys, @config.max_retrys, :method => :get, :followlocation => true) do |resp, url|
+        browser.process_all(external_links.keys, @config.max_retrys, :method => :head, :followlocation => true) do |resp, url|
           # if resp.request
           #   url = (resp.request.url || resp.getURI.to_s)
           # else
