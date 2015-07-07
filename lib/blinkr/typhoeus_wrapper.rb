@@ -91,6 +91,7 @@ module Blinkr
             block.call resp, nil, nil
           end
         end
+        puts "Requesting #{url} via #{name}"
         @hydra.queue req
         @count += 1
       end
