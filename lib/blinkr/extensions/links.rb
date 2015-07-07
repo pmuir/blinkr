@@ -56,8 +56,12 @@ module Blinkr
           end
         end
         puts "Ready to process external links" if @config.verbose
-        browser.process_all(external_links.keys, @config.max_retrys, :method => :get, :followlocation => true) do |resp|
-          url = (resp.request.url || request.getURI.to_s)
+        browser.process_all(external_links.keys, @config.max_retrys, :method => :get, :followlocation => true) do |resp, url|
+          # if resp.request
+          #   url = (resp.request.url || resp.getURI.to_s)
+          # else
+          #   url = resp.effective_url
+          # end
           puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
           if resp.code.to_i < 200 || resp.code.to_i > 300
             response = resp
