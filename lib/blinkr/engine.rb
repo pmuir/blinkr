@@ -37,7 +37,7 @@ module Blinkr
 
     def run
       context = OpenStruct.new({:pages => {}})
-      if defined?(JRUBY_VERSION) && @config.browser == 'manticore'
+      if defined?(JRUBY_VERSION)
         require 'blinkr/manticore_wrapper'
         bulk_browser = browser = ManticoreWrapper.new(@config, context)
       else

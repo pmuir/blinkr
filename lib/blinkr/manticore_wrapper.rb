@@ -2,11 +2,11 @@ require 'manticore'
 require 'blinkr/cache'
 require 'blinkr/http_utils'
 
-module Blinker
+module Blinkr
   class ManticoreWrapper
     include HttpUtils
 
-    attr_reader count
+    attr_reader :count
 
     def initialize(config, context)
       @config = config.validate
