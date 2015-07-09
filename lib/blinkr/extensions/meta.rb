@@ -1,6 +1,7 @@
 require 'blinkr/error'
 require 'ostruct'
 require 'slim'
+require 'nokogiri'
 
 module Blinkr
   module Extensions
@@ -31,7 +32,7 @@ module Blinkr
       private
 
       def title page
-        elms = page.body.css('title')
+        elms = Nokogiri::HTML(page.response.body).freeze.css('title')
         if elms.length > 1
           snippets = []
           lines = []
@@ -68,7 +69,7 @@ module Blinkr
       end
 
       def description page
-        elms = page.body.css('meta[name=description]')
+        elms = Nokogiri::HTML(page.response.body).freeze.css('meta[name=description]')
         if elms.length > 1
           snippets = []
           lines = []

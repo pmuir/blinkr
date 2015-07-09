@@ -74,7 +74,7 @@ module Blinkr
             url,
             opts.merge(:followlocation => true)
         )
-        req.on_complete do |resp|
+        req.on_headers do |resp|
           if retry? resp
             if limit > 1
               puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @config.verbose
@@ -85,10 +85,10 @@ module Blinkr
                                                 :mock => true)
               response.request = Typhoeus::Request.new(url)
               Typhoeus.stub(url).and_return(response)
-              block.call response, nil, nil
+              block.call response, url, nil
             end
           else
-            block.call resp, nil, nil
+            block.call resp, url, nil
           end
         end
         @hydra.queue req

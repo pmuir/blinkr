@@ -37,7 +37,7 @@ module Blinkr
 
     def run
       context = OpenStruct.new({:pages => {}})
-      if defined?(JRUBY_VERSION) && @config.browser == 'manticore'
+      if defined?(JRUBY_VERSION)
         require 'blinkr/manticore_wrapper'
         bulk_browser = browser = ManticoreWrapper.new(@config, context)
       else
@@ -51,8 +51,7 @@ module Blinkr
         url = response.request.base_url
         if response.success?
           puts "Loaded page #{url}" if @config.verbose
-          body = Nokogiri::HTML(response.body)
-          page = OpenStruct.new({:response => response, :body => body.freeze,
+          page = OpenStruct.new({:response => response.freeze,
                                  :errors => ErrorArray.new(@config),
                                  :resource_errors => resource_errors || [],
                                  :javascript_errors => javascript_errors || []})
@@ -68,7 +67,6 @@ module Blinkr
       puts "Loaded #{page_count} pages using #{browser.name}."
       puts 'Analyzing pages'
       analyze context, bulk_browser
-      context.pages.reject! { |_, page| page.errors.empty? }
 
       unless @config.export.nil?
         FileUtils.mkdir_p Pathname.new(@config.report).parent

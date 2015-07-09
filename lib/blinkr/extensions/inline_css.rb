@@ -1,4 +1,5 @@
 require 'blinkr/error'
+require 'nokogiri'
 
 module Blinkr
   module Extensions
@@ -9,7 +10,7 @@ module Blinkr
       end
 
       def collect page
-        page.body.css('[style]').each do |elm|
+        Nokogiri::HTML(page.response.body).freeze.css('[style]').each do |elm|
           if elm['style'] == ""
             page.errors << Blinkr::Error.new({:severity => 'info', :category => 'HTML Compatibility/Correctness',
                                               :type => 'style attribute is empty',
