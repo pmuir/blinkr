@@ -32,7 +32,7 @@ module Blinkr
 
         dest = dest_uri.to_s
       rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
-        # ignored
+        return nil
       rescue StandardError
         return nil
       end

@@ -1,4 +1,5 @@
 require 'blinkr/error'
+require 'nokogiri'
 
 module Blinkr
   module Extensions
@@ -9,7 +10,7 @@ module Blinkr
       end
 
       def collect page
-        page.body.css('a:not([title])').each do |a|
+        Nokogiri::HTML(page.response.body).freeze.css('a:not([title])').each do |a|
           page.errors << Blinkr::Error.new({:severity => 'info', :category => 'SEO',
                                             :type => '<a title=""> missing',
                                             :title => "#{a['href']} (line #{a.line})",

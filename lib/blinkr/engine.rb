@@ -51,8 +51,7 @@ module Blinkr
         url = response.request.base_url
         if response.success?
           puts "Loaded page #{url}" if @config.verbose
-          body = Nokogiri::HTML(response.body)
-          page = OpenStruct.new({:response => response, :body => body.freeze,
+          page = OpenStruct.new({:response => response.freeze,
                                  :errors => ErrorArray.new(@config),
                                  :resource_errors => resource_errors || [],
                                  :javascript_errors => javascript_errors || []})
@@ -68,7 +67,6 @@ module Blinkr
       puts "Loaded #{page_count} pages using #{browser.name}."
       puts 'Analyzing pages'
       analyze context, bulk_browser
-      context.pages.reject! { |_, page| page.errors.empty? }
 
       unless @config.export.nil?
         FileUtils.mkdir_p Pathname.new(@config.report).parent
@@ -128,7 +126,7 @@ module Blinkr
 
     def execute(method, *args)
       result = []
-      Parallel.each(@extensions, :in_threads => Parallel.processor_count * 3) do |e|
+      @extensions.each do |e|
         result << e.send(method, *args) if e.respond_to? method
       end
       result

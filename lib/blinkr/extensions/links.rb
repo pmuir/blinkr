@@ -1,6 +1,7 @@
 require 'uri'
 require 'blinkr/error'
 require 'blinkr/http_utils'
+require 'nokogiri'
 
 module Blinkr
   module Extensions
@@ -13,15 +14,23 @@ module Blinkr
       end
 
       def collect(page)
-        page.body.css('a[href]').each do |a|
+        Nokogiri::HTML(page.response.body).freeze.css('a[href]').each do |a|
           attr = a.attribute('href')
           src = page.response.effective_url
           url = attr.value
           unless @config.skipped?(url)
             url = sanitize url, src
-            unless url.nil?
+            if url.nil?
+              page.errors << Blinkr::Error.new({:severity => :warning, :category => 'URL could not be checked',
+                                                :type => 'URL could not be checked', :url => url,
+                                                :title => "#{url} could not be checked (line #{attr.line})",
+                                                :code => nil, :message => 'Not checked',
+                                                :detail => 'Failed URI creation', :snippet => a.to_s,
+                                                :icon => 'fa-bookmark-o'
+                                               })
+            else
               @links[url] ||= []
-              @links[url] << {:page => page, :line => attr.line, :snippet => attr.parent.to_s}
+              @links[url] << {:page => page, :line => attr.line, :snippet => a.to_s}
             end
           end
         end
@@ -57,22 +66,22 @@ module Blinkr
         end
         puts "Ready to process external links" if @config.verbose
         browser.process_all(external_links.keys, @config.max_retrys, :method => :get, :followlocation => true) do |resp, url|
-          # if resp.request
-          #   url = (resp.request.url || resp.getURI.to_s)
-          # else
-          #   url = resp.effective_url
-          # end
-          puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
+          puts "Loaded #{url} via #{browser.name}" if @config.verbose
           if resp.code.to_i < 200 || resp.code.to_i > 300
             response = resp
 
-            metadata = external_links[url]
+            metadata = @links[url]
             metadata.each do |src|
               detail = nil
-              if response.status_message.nil?
-                message = response.return_message
-              else
+              if response.respond_to?(:status_message)
                 message = response.status_message
+              end
+
+              if response.respond_to?(:message)
+                message = response.message
+              end
+
+              if response.respond_to?(:return_message)
                 detail = response.return_message unless resp.return_message == 'No error'
               end
 
@@ -86,7 +95,7 @@ module Blinkr
                                                       :url => url, :title => "#{url} (line #{src[:line]})",
                                                       :code => response.code.to_i, :message => message,
                                                       :detail => detail, :snippet => src[:snippet],
-                                                      :icon => 'fa-bookmark-o'}) unless response.success?
+                                                      :icon => 'fa-bookmark-o'})
             end
           end
           processed += 1

@@ -37,21 +37,20 @@ module Blinkr
     def _process(url, limit, max, opts = {}, &block)
       unless @config.skipped? url
         resp = @client.async.get(url)
-        resp.on_complete do |resp|
-          if retry? resp
-            if limit > 1
-              puts "Loading #{url} via manticore (attempt #{max - limit + 2} of #{max})" if @config.verbose
-              _process(url, limit - 1, max, &Proc.new)
-            else
+        resp.on_success do |resp|
+          if resp.times_retried > limit
               puts "Loading #{url} via manticore failed" if @config.verbose
               response = @client.respond_with(:code => 0, :status_message => "Server timed out after #{max} retries",
                                               :body => '').get(url)
-              block.call response, nil, nil
-            end
+              block.call response, url, nil
           else
-            block.call resp, nil, nil
+            block.call resp, url, nil
           end
           @count += 1
+        end
+        resp.on_failure do |resp|
+          # TODO: Figure out how to get this to create an error
+          puts "#{resp} failed, code #{resp.code}"
         end
       end
     end

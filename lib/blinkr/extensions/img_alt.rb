@@ -1,4 +1,5 @@
 require 'blinkr/error'
+require 'nokogiri'
 
 module Blinkr
   module Extensions
@@ -9,7 +10,7 @@ module Blinkr
       end
 
       def collect page
-        page.body.css('img:not([alt])').each do |img|
+        Nokogiri::HTML(page.response.body).freeze.css('img:not([alt])').each do |img|
           page.errors << OpenStruct.new({:severity => 'warning', :category => 'SEO',
                                          :type => '<img alt=""> missing',
                                          :title => "#{img['src']} (line #{img.line})",
