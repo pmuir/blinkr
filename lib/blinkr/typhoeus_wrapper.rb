@@ -13,9 +13,9 @@ module Blinkr
       # Configure Typhoeus a bit
       Typhoeus::Config.verbose = true if config.vverbose
       Typhoeus::Config.cache = Blinkr::Cache.new
-      @hydra = Typhoeus::Hydra.new(:maxconnects => (@config.maxconnects || 30),
-                                   :max_total_connections => (@config.maxconnects || 30),
-                                   :max_concurrency => (@config.maxconnects || 30))
+      @hydra = Typhoeus::Hydra.new(:maxconnects => (@config.maxconnects || 60),
+                                   :max_total_connections => (@config.maxconnects || 60),
+                                   :max_concurrency => (@config.maxconnects || 60))
       @count = 0
       @context = context
     end
