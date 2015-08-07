@@ -2,6 +2,7 @@
 
 require 'blinkr'
 require 'optparse'
+require 'blinkr/hacks'
 
 options = {}
 
@@ -26,5 +27,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
+start = Time.now
 Blinkr.run options[:base_url], options[:config], options[:single_url], options[:verbose], options[:vverbose]
+puts (Time.now - start).duration
 
