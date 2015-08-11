@@ -11,10 +11,10 @@ class Numeric
     # self.duration_as_arr.zip ['Days','Hours','Minutes','Seconds']).flatten.join ' '
 
     result = []
-    result << "#{days} Days" if days > 0
-    result << "#{hours} Hours" if hours > 0
-    result << "#{mins} Minutes" if mins > 0
-    result << "#{secs} Seconds" if secs > 0
-    return result.join(' ')
+    result << "#{days} days" if days > 0
+    result << "#{hours} hours" if hours > 0
+    result << "#{mins} minutes" if mins > 0
+    result << "#{secs} seconds" if secs > 0
+    result.join(' ')
   end
 end
