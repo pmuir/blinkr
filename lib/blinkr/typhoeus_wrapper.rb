@@ -1,6 +1,7 @@
 require 'typhoeus'
 require 'blinkr/cache'
 require 'blinkr/http_utils'
+require 'net/http'
 
 module Blinkr
   class TyphoeusWrapper
@@ -76,6 +77,26 @@ module Blinkr
         )
         req.on_complete do |resp|
           if retry? resp
+            if resp.code.to_i == 0
+              puts "Response code of '0', using net/http for #{url}" if @config.verbose
+              response = nil
+
+              begin
+                uri = URI::parse url
+                http_response = Net::HTTP.get_response(uri)
+                response = Typhoeus::Response.new(:code => http_response.code, :status_message => http_response.message,
+                                                  :mock => true)
+              rescue
+                response = Typhoeus::Response.new(:code => 410, :status_message => 'Could not reach the resource',
+                                                  :mock => true)
+              end
+
+              response.request = Typhoeus::Request.new(url)
+              Typhoeus.stub(url).and_return(response)
+              block.call response, nil, nil
+              next
+            end
+
             if limit > 1
               puts "Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})" if @config.verbose
               _process(url, limit - 1, max, &Proc.new)
