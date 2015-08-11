@@ -26,5 +26,11 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-Blinkr.run options[:base_url], options[:config], options[:single_url], options[:verbose], options[:vverbose]
+require 'blinkr/hacks'
+require 'date'
+start = DateTime.now
+puts "Started at #{start.to_s}"
+Blinkr.run options[:base_url].freeze, options[:config].freeze, options[:single_url].freeze,
+           options[:verbose].freeze, options[:vverbose].freeze
+puts "Total time: #{(DateTime.now.to_time - start.to_time).duration}"
 

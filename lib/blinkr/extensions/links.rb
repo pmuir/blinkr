@@ -31,6 +31,8 @@ module Blinkr
         puts '----------------------'
         puts " #{@links.length} links to check "
         puts '----------------------'
+        start = DateTime.now
+
         external_links = @links.reject { |k| k.start_with? @config.base_url }
         processed = 0
         # Find the internal links
@@ -59,6 +61,7 @@ module Blinkr
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
           browser.process(url, @config.max_retrys, :method => :get, :followlocation => true) do |resp|
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
+
             if resp.code.to_i < 200 || resp.code.to_i > 300
               response = resp
 
@@ -89,6 +92,7 @@ module Blinkr
           end
         end
         browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper
+        puts "Total time in links: #{(DateTime.now.to_time - start.to_time).duration}" if @config.verbose
       end
 
     end
