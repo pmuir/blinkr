@@ -39,7 +39,7 @@ module Blinkr
             lines << elm.line
             snippets << elm.to_s
           end
-          page.errors << Blinkr::Error.new({:severity => :info, :category => 'HTML Compatibility/Correctness',
+          page.errors << Blinkr::Error.new({:severity => :danger, :category => 'HTML Compatibility/Correctness',
                                             :type => '<title> tag declared more than once',
                                             :title => %Q{<title> declared more than once (lines #{lines.join(', ')})},
                                             :message => %Q{<title> declared more than onc},
@@ -53,13 +53,13 @@ module Blinkr
           @titles[title] ||= {}
           @titles[title][page.response.effective_url] = page
           if title.length < 20
-            page.errors << Blinkr::Error.new({:severity => :info, :category => 'SEO', :type => 'page title too short',
+            page.errors << Blinkr::Error.new({:severity => :warning, :category => 'SEO', :type => 'page title too short',
                                               :title => %Q{<title> too short (line #{elms.first.line})},
                                               :message => %Q{<title> too short (< 20 characters)},
                                               :snippet => elms.first.to_s, :icon => 'fa-header'})
           end
           if title.length > 55
-            page.errors << Blinkr::Error.new({:severity => :info, :category => 'SEO', :type => 'page title too long',
+            page.errors << Blinkr::Error.new({:severity => :warning, :category => 'SEO', :type => 'page title too long',
                                               :title => %Q{<title> too long (line #{elms.first.line})},
                                               :message => %Q{<title> too long (> 55 characters)},
                                               :snippet => elms.first.to_s, :icon => 'fa-header'})
@@ -76,13 +76,13 @@ module Blinkr
             lines << elm.line
             snippets << elm.to_s
           end
-          page.errors << Blinkr::Error.new({:severity => :info, :category => 'HTML Compatibility/Correctness',
+          page.errors << Blinkr::Error.new({:severity => :danger, :category => 'HTML Compatibility/Correctness',
                                             :type => '<meta name="description"> tag declared more than once',
                                             :title => %Q{<meta name="description"> tag declared more than once (lines #{lines.join(', ')})},
                                             :message => %Q{<meta name="description"> tag declared more than once},
                                             :snippet => snippets.join('\n'), :icon => 'fa-header'})
         elsif elms.empty?
-          page.errors << Blinkr::Error.new({:severity => :info, :category => 'SEO',
+          page.errors << Blinkr::Error.new({:severity => :warning, :category => 'SEO',
                                             :type => '<meta name="description"> tag missing',
                                             :title => %Q{<meta name="description"> tag missing},
                                             :message => %Q{<meta name="description"> tag missing},
@@ -92,14 +92,14 @@ module Blinkr
           @descriptions[desc] ||= {}
           @descriptions[desc][page.response.effective_url] = page
           if desc.length < 60
-            page.errors << Blinkr::Error.new({:severity => :info, :category => 'SEO',
+            page.errors << Blinkr::Error.new({:severity => :warning, :category => 'SEO',
                                               :type => '<meta name="description"> too short',
                                               :title => %Q{<meta name="description"> too short (lines #{elms.first.line})},
                                               :message => %Q{<meta name="description"> too short (< 60 characters)},
                                               :snippet => elms.first.to_s, :icon => 'fa-header'})
           end
           if desc.length > 115
-            page.errors << Blinkr::Error.new({:severity => :info, :category => 'SEO',
+            page.errors << Blinkr::Error.new({:severity => :warning, :category => 'SEO',
                                               :type => '<meta name="description"> too long',
                                               :title => %Q{<meta name="description"> too long (lines #{elms.first.line})},
                                               :message => %Q{<meta name="description"> too long (> 115 characters)},
