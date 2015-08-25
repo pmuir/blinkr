@@ -60,6 +60,7 @@ module Blinkr
         external_links.each do |url, metadata|
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
           browser.process(url, @config.max_retrys, :method => :get, :followlocation => true, :timeout => 30,
+                                                   :cookiefile => '_tmp/cookies', :cookiejar => '_tmp/cookies',
                                                    :connecttimeout => 10, :maxredirs => 3) do |resp|
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
 
