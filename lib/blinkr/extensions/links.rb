@@ -64,7 +64,7 @@ module Blinkr
                                                    :connecttimeout => 10, :maxredirs => 3) do |resp|
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
 
-            if resp.code.to_i < 200 || resp.code.to_i > 300
+            if resp.code.to_i < 200 || (resp.code.to_i > 300 && @config.warning_on_300s)
               response = resp
 
               metadata.each do |src|
@@ -81,12 +81,12 @@ module Blinkr
                   severity = :warning
                 end
                 src[:page].errors << Blinkr::Error.new({:severity => severity,
-                :category => 'Resources missing',
-                :type => '<a href=""> target cannot be loaded',
-                :url => url, :title => "#{url} (line #{src[:line]})",
-                :code => response.code.to_i, :message => message,
-                :detail => detail, :snippet => src[:snippet],
-                :icon => 'fa-bookmark-o'}) unless response.success?
+                                                        :category => 'Resources missing',
+                                                        :type => '<a href=""> target cannot be loaded',
+                                                        :url => url, :title => "#{url} (line #{src[:line]})",
+                                                        :code => response.code.to_i, :message => message,
+                                                        :detail => detail, :snippet => src[:snippet],
+                                                        :icon => 'fa-bookmark-o'}) unless response.success?
               end
             end
             processed += 1

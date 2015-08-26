@@ -9,7 +9,9 @@ module Blinkr
     end
 
     DEFAULTS = {:skips => [], :ignores => [], :max_retrys => 3, :browser => 'typhoeus',
-                :viewport => 1200, :phantomjs_threads => 8, :report => 'blinkr.html'}
+                :viewport => 1200, :phantomjs_threads => 8, :report => 'blinkr.html',
+                :warning_on_300s => false
+               }
 
     def initialize(hash={})
       super(DEFAULTS.merge(hash))
