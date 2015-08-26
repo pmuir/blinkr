@@ -30,6 +30,12 @@ module Blinkr
         # If we have an absolute path URI, join it to the base URL
         dest_uri = URI.join(base_uri.scheme, base_uri.hostname, base_uri.port, dest_uri) if empty?(dest_uri.scheme) && empty?(dest_uri.hostname)
 
+        # switch multiple '/' to just one. Those types of URIs don't affect the browser,
+        # but they do affect our checking
+        dest_uri.path = dest_uri.path.gsub(/\/+/, '/') if dest_uri.path
+        dest_uri.query = dest_uri.query.gsub(/\/+/, '/') if dest_uri.query
+        dest_uri.fragment = dest_uri.query.gsub(/\/+/, '/') if dest_uri.fragment
+
         dest = dest_uri.to_s
       rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
         # ignored

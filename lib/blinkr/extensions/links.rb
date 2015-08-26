@@ -37,9 +37,14 @@ module Blinkr
         processed = 0
         # Find the internal links
         @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
+          # TODO figure out what to do about relative links
           link = URI.parse(url)
+
+          # fix up links so they're proper, also drop fragments and queries as they won't be in the sitemap that way
           link.fragment = nil
           link.query = nil
+          link.path = link.path.gsub(/\/+/, '/') if link.path
+
           unless context.pages.keys.include?(link.to_s) || context.pages.keys.include?((link.to_s + '/'))
             locations.each do |location|
               location[:page].errors << Blinkr::Error.new({:severity => :warning,
