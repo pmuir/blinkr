@@ -58,8 +58,8 @@ module Blinkr
                                                            :icon => 'fa-bookmark-o'
                                                           })
               # It wasn't in the sitemap, so we'll add it to the "external_links" to still be checked
-              external_links[url] = locations
             end
+            external_links[link.to_s] = locations
           end
         end
         external_links.each do |url, metadata|
