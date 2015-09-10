@@ -39,7 +39,14 @@ module Blinkr
     end
 
     def ignored? url, code, message
-      ignores.any? { |ignore| ( !url.nil? && ignore.has_key?('url') ? !ignore['url'].match(url).nil? : true )  && ( !code.nil? && ignore.has_key?('code') ? ignore['code'] == code : true ) && ( !message.nil? && ignore.has_key?('message') ? !ignore['message'].match(message).nil? : true ) }
+      return false if uril.nil? || code.nil? || message.nil?
+
+      ignores.any? do |ignore|
+        return true if ignore.has_key?('url') && ignore['url'].match(url)
+        return true if ignore.has_key?('code') && ignore['code'] == code
+        return true if ignore.has_key?('message') && ignore['message'].match(message)
+        false
+      end
     end
 
     def skipped? url
