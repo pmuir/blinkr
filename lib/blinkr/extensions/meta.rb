@@ -1,5 +1,4 @@
 require 'blinkr/error'
-require 'ostruct'
 require 'slim'
 
 module Blinkr
