@@ -33,8 +33,8 @@ module Blinkr
         puts '----------------------'
         start = DateTime.now
 
-        external_links = @links.reject { |k| k.start_with? @config.base_url }
         processed = 0
+
         # Find the internal links
         @links.select{|k| k.start_with? @config.base_url}.each do |url, locations|
           # TODO figure out what to do about relative links
@@ -59,32 +59,32 @@ module Blinkr
                                                           })
               # It wasn't in the sitemap, so we'll add it to the "external_links" to still be checked
             end
-            external_links[link.to_s] = locations
           end
         end
-        external_links.each do |url, metadata|
+        @links.each do |url, metadata|
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
           browser.process(url, @config.max_retrys, :method => :get, :followlocation => true, :timeout => 30,
                                                    :cookiefile => '_tmp/cookies', :cookiejar => '_tmp/cookies',
                                                    :connecttimeout => 10, :maxredirs => 3) do |resp|
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
 
-            if resp.code.to_i < 200 || (resp.code.to_i > 300 && @config.warning_on_300s)
+            resp_code = resp.code.to_i
+            if resp_code < 200 || ((resp_code > 300 && resp_code < 400) && @config.warning_on_300s) || resp_code > 400
               response = resp
 
-              metadata.each do |src|
-                detail = nil
-                if response.status_message.nil?
-                  message = response.return_message
-                else
-                  message = response.status_message
-                  detail = response.return_message unless resp.return_message == 'No error'
-                end
+              detail = nil
+              if response.status_message.nil?
+                message = response.return_message
+              else
+                message = response.status_message
+                detail = response.return_message unless resp.return_message == 'No error'
+              end
 
-                severity = :danger
-                if response.code.to_i >= 300 && response.code.to_i < 400
-                  severity = :warning
-                end
+              severity = :danger
+              if response.code.to_i >= 300 && response.code.to_i < 400
+                severity = :warning
+              end
+              metadata.each do |src|
                 src[:page].errors << Blinkr::Error.new({:severity => severity,
                                                         :category => 'Resources missing',
                                                         :type => '<a href=""> target cannot be loaded',
@@ -95,7 +95,7 @@ module Blinkr
               end
             end
             processed += 1
-            puts "Processed #{processed} of #{external_links.size}" if @config.verbose
+            puts "Processed #{processed} of #{@links.size}" if @config.verbose
           end
         end
         browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper
