@@ -18,7 +18,6 @@ module Blinkr
     end
 
     def render
-      @context.pages.delete_if { |_, page| page.errors.empty? }
       @context.total = 0
       @context.severity = {}
       @context.category = {}
