@@ -2,8 +2,19 @@ doctype html
 html[ng-app="blinkr"]
   head
     meta[http-equiv="Content-Type" content="text/html; charset=UTF-8"]
-    link[href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"]
+    link[href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"]
     link[href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"]
+    script[src="https://code.jquery.com/jquery-2.1.4.js"]
+    script[src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"]
+    script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"]
+    /script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"]
+    /script[src="https://code.jquery.com/jquery-2.1.4.min.js"]
+    /script[src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"]
+
+    /script[src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.4/ui-bootstrap.min.js"]
+    /script[src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.4/ui-bootstrap.js"]
+    /script[src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.4/ui-bootstrap-tpls.min.js"]
+    /script[src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.4/ui-bootstrap-tpls.js"]
     title
       | Blinkr
     meta[content="width=device-width, initial-scale=1" name="viewport"]
@@ -73,7 +84,14 @@ html[ng-app="blinkr"]
                               | {{key}}
                             .label.label-default
                               | {{value.count}}
-        .page[ng-repeat="(url,page) in report.pages | showPage:filters"]
+        .text-center
+          button.btn.btn-default.btn-lg[ng-disabled="currentPage == 0" ng-click="currentPage = currentPage - 1"] Previous
+          '
+            {{currentPage + 1}} / {{numberOfPages()}}
+          button.btn.btn-default.btn-lg[ng-disabled="currentPage >= numberOfPages() - 1" ng-click="currentPage = currentPage + 1"] Next
+          br
+          br
+        .page[ng-repeat="page in report.pages | showPage:filters | startFrom:currentPage * limitSize | limitTo:limitSize"]
           div[class="panel panel-{{page.max_severity}}"]
             .panel-heading
               .panel-title
@@ -81,12 +99,12 @@ html[ng-app="blinkr"]
                   li
                     a>[data-toggle="collapse" href="#"]
                       i.fa.fa-caret-square-o-right
-                    | {{url}} ({{page.errors.length}} total errors)
+                    | {{page.url}} ({{page.errors.length}} total errors)
                   li
-                    a[href="{{url}}" target="_blank"]
+                    a[href="{{page.url}}" target="_blank"]
                       i.fa.fa-external-link
                   li
-                    a[href="{{url}}" target="_blank"]
+                    a[href="{{page.url}}" target="_blank"]
                       i.fa.fa-file-code-o
             .panel-body.collapse.panel-collapse
               ul
@@ -96,13 +114,10 @@ html[ng-app="blinkr"]
                     | {{page_error.code}} {{page_error.message}}
                   div
                     ' {{page_error.title}}
-                    a[href="{{page_error.title}}" target="_blank"]
+                    a[href="{{page_error.title}}" target="_blank" ng-if="page_error.title.startsWith('http')"]
                       i.fa.fa-external-link
                   pre
                     | {{page_error.snippet}}
-    script[src="http://code.jquery.com/jquery-2.1.4.min.js"]
-    script[src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"]
-    script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"]
     javascript:
       var blinkr = angular.module('blinkr', []);
       blinkr.factory('report', function reportFactory() {
@@ -113,7 +128,10 @@ html[ng-app="blinkr"]
         $scope.report = report;
         $scope.filters = {severities: {}, categories: {}, types: {}};
         $scope.report = report;
-        $scope.numPages = Object.keys(report.pages).length;
+        $scope.numPages = report.pages.length;
+        $scope.filteredNumPages = 0;
+        $scope.currentPage = 0;
+        $scope.limitSize = 25;
         window.scope = $scope;
 
         Object.keys($scope.report.severity).forEach(function (s) {
@@ -127,7 +145,18 @@ html[ng-app="blinkr"]
         Object.keys($scope.report.type).forEach(function (t) {
           $scope.filters.types[t] = {enabled: false, count: report.type[t].count};
         });
+
+        $scope.numberOfPages = function () {
+          return Math.ceil($scope.filteredNumPages / $scope.limitSize);
+        }
       }]);
+
+      blinkr.filter('startFrom', function () {
+        return function (input, start) {
+          start = +start; //parse to int
+          return input.slice(start);
+        }
+      });
 
       blinkr.filter('displayError', function () {
         return function (errors, filters) {
@@ -144,15 +173,17 @@ html[ng-app="blinkr"]
 
       blinkr.filter('showPage', function () {
         return function (all_pages, filters) {
-          var pages = {};
-          Object.keys(all_pages).forEach(function (url) {
-            var page = all_pages[url];
-            page.errors.forEach(function (error) {
-              if (showError(error, filters)) {
-                pages[url] = all_pages[url];
-              }
-            });
+          var pages = [];
+          all_pages.forEach(function (page) {
+            if ($.arrayIntersect(enabledFilters(filters, 'categories'), page.categories).length > 0) {
+              pages.push(page);
+            } else if ($.arrayIntersect(enabledFilters(filters, 'types'), page.types).length > 0) {
+              pages.push(page);
+            } else if ($.arrayIntersect(enabledFilters(filters, 'severities'), page.severities).length > 0) {
+              pages.push(page);
+            }
           });
+          scope.filteredNumPages = pages.length;
           return pages;
         }
       });
@@ -212,3 +243,9 @@ html[ng-app="blinkr"]
       angular.element(document).ready(function () {
         panelBind();
       });
+
+      $.arrayIntersect = function (a, b) {
+        return $.grep(a, function (i) {
+          return $.inArray(i, b) > -1;
+        });
+      };
