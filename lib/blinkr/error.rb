@@ -7,7 +7,7 @@ module Blinkr
       raise TypeError 'severity must be a string or symbol' unless opts[:severity].is_a?(String) || opts[:severity].is_a?(Symbol)
       raise 'severity not a recognized value' unless SEVERITY.include? opts[:severity].to_sym
 
-      @severity = opts[:severity]
+      @severity = opts[:severity].to_sym
       @category = opts[:category]
       @type = opts[:type]
       @title = opts[:title]
