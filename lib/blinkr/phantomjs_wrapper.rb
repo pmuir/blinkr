@@ -47,7 +47,7 @@ module Blinkr
           return block.call response, @cache.get("#{url}-resourceErrors"), @cache.get("#{url}-javascriptErrors")
         end
 
-        output, status = Open3.capture2("phantomjs #{SNAP_JS} #{url} #{@config.viewport}")
+        output, status = Open3.capture2("#{name} #{SNAP_JS} #{url} #{@config.viewport}")
         if status == 0
           json = JSON.load(output)
           response = Typhoeus::Response.new(:code => 200, :body => json['content'], :effective_url => json['url'],

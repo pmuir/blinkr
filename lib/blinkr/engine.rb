@@ -1,6 +1,7 @@
 require 'nokogiri'
 require 'blinkr/phantomjs_wrapper'
 require 'blinkr/typhoeus_wrapper'
+require 'blinkr/slimer_js_wrapper'
 require 'blinkr/http_utils'
 require 'blinkr/sitemap'
 require 'blinkr/report'
@@ -44,6 +45,7 @@ module Blinkr
         bulk_browser = browser = TyphoeusWrapper.new(@config, context)
       end
       browser = PhantomJSWrapper.new(@config, context) if @config.browser == 'phantomjs'
+      browser = SlimerJSWrapper.new(@config, context) if @config.browser == 'slimerjs'
       page_count = 0
       urls = sitemap_locations.uniq
       puts "Fetching #{urls.size} pages from sitemap"
