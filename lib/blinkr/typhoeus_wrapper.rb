@@ -77,7 +77,9 @@ module Blinkr
       unless @config.skipped? url
         req = Typhoeus::Request.new(
             url,
-            opts.merge(:followlocation => true)
+            opts.merge(:followlocation => true, :timeout => 60,
+                       :cookiefile => '_tmp/cookies', :cookiejar => '_tmp/cookies',
+                       :connecttimeout => 30, :maxredirs => 3)
         )
         req.on_complete do |resp|
           if retry? resp

@@ -63,9 +63,9 @@ module Blinkr
         end
         @links.each do |url, metadata|
           # if link start_with? @config.base_url check to see if it's in the sitemap.xml
-          browser.process(url, @config.max_retrys, :method => :get, :followlocation => true, :timeout => 30,
+          browser.process(url, @config.max_retrys, :method => :get, :followlocation => true, :timeout => 60,
                                                    :cookiefile => '_tmp/cookies', :cookiejar => '_tmp/cookies',
-                                                   :connecttimeout => 10, :maxredirs => 3) do |resp|
+                          :connecttimeout => 30, :maxredirs => 3) do |resp|
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
 
             resp_code = resp.code.to_i
