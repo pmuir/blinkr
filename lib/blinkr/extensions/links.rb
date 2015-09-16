@@ -69,7 +69,7 @@ module Blinkr
             puts "Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}" if @config.verbose
 
             resp_code = resp.code.to_i
-            if resp_code < 200 || ((resp_code > 300 && resp_code < 400) && @config.warning_on_300s) || resp_code > 400
+            if ((resp_code > 300 && resp_code < 400) && @config.warning_on_300s) || resp_code > 400
               response = resp
 
               detail = nil

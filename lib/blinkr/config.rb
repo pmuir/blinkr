@@ -38,13 +38,24 @@ module Blinkr
       r
     end
 
-    def ignored? url, code, message
-      return false if uril.nil? || code.nil? || message.nil?
+    def ignored? error
+      url = error.url
+      code = error.code
+      message = error.message
+      snippet = error.snippet
 
       ignores.any? do |ignore|
-        return true if ignore.has_key?('url') && ignore['url'].match(url)
-        return true if ignore.has_key?('code') && ignore['code'] == code
-        return true if ignore.has_key?('message') && ignore['message'].match(message)
+	return true if ignore['url'].is_a?(Regexp) && url && ignore['url'] =~ url
+	return true if ignore['url'] == url
+
+        return true if ignore['code'].is_a?(Regexp) && code && ignore['code'] == code
+        return true if ignore['code']  == code
+
+        return true if ignore['message'].is_a?(Regexp) && message && ignore['message'] =~ message
+        return true if ignore['message']  == message
+
+        return true if ignore['snippet'].is_a?(Regexp) && snippet && ignore['snippet'] =~ snippet
+        return true if ignore['snippet'] == snippet
         false
       end
     end

@@ -109,7 +109,7 @@ module Blinkr
       end
 
       def <<(error)
-        if @config.ignored?(error.url, error.code, error.message)
+        if @config.ignored?(error)
           self
         else
           super
