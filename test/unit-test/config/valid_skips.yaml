@@ -1,0 +1,3 @@
+skips:
+  - !ruby/regexp /^http:\/\/(www\.)?example\.com\/regex$/
+  - http://www.example.com/bar

@@ -1,36 +1,47 @@
 #!/usr/bin/env ruby
-
 require 'blinkr'
 require 'optparse'
+Encoding.default_external = 'UTF-8'
 
 options = {}
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: blinkr [options]"
+  opts.banner = 'Usage: blinkr [options]'
 
-  opts.on("-c", "--config FILE", "specify the config.yaml file") do |opt|
-    options[:config] = opt
+  opts.on('-c', '--config FILE', 'specify the config.yaml file') do |opt|
+    options[:config_file] = opt
   end
-  opts.on("-u", "--base-url URL", "specify the URL of the site root") do |opt|
+  opts.on('-u', '--base-url URL', 'specify the URL of the site root') do |opt|
     options[:base_url] = opt
   end
-  opts.on("-v", "--verbose", "output debugging info to the console") do |opt|
+  opts.on('-v', '--verbose', 'output debugging info to the console') do |opt|
     options[:verbose] = opt
   end
-  opts.on("-w", "--very-verbose", "additionally, output libcurl debugging info to the console, normally used with -s") do |opt|
-    options[:vverbose] = opt
+  opts.on('-w', '--very-verbose', 'additionally, output libcurl debugging info to the console, normally used with -s') do |opt|
+    options[:very_verbose] = opt
   end
-  opts.on("-s", "--single-url URL", "test a single URL, outputting the response to the console") do |opt|
+  opts.on('-s', '--single-url URL', 'test a single URL, outputting the response to the console') do |opt|
     options[:single_url] = opt
     options[:base_url] = opt
+  end
+  opts.on('--ignore-external', 'Ignore external links') do |opt|
+    options[:ignore_external] = opt
+  end
+  opts.on('--ignore-internal', 'Ignore internal links') do |opt|
+    options[:ignore_internal] = opt
+  end
+  opts.on('--ignore-ssl', 'Disable SSL certificate checking') do |opt|
+    options[:ignore_ssl] = opt
   end
 end.parse!
 
 require 'blinkr/hacks'
 require 'date'
+require 'blinkr/formatter/default_logger'
+require 'colorize'
+require 'openssl'
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE if options[:ignore_ssl]
 start = DateTime.now
-puts "Started at #{start.to_s}"
-Blinkr.run options[:base_url].freeze, options[:config].freeze, options[:single_url].freeze,
-           options[:verbose].freeze, options[:vverbose].freeze
-puts "Total time: #{(DateTime.now.to_time - start.to_time).duration}"
-
+Blinkr.logger.info("Started at #{start}")
+Blinkr.run(options)
+puts("Total time: #{(DateTime.now.to_time - start.to_time).duration}")

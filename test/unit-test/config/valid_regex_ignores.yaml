@@ -1,0 +1,8 @@
+ignores:
+  - url: http://www.example.com/foo
+    message: Not Found
+  - url: !ruby/regexp /^http:\/\/(www\.)?example\.com\/foo/
+    code: 500
+
+skips:
+  - !ruby/regexp /^http:\/\/(www\.)?example\.com\/bar/

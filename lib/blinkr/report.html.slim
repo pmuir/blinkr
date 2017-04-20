@@ -2,8 +2,8 @@ doctype html
 html[ng-app="blinkr"]
   head
     meta[http-equiv="Content-Type" content="text/html; charset=UTF-8"]
-    link[href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"]
-    link[href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"]
+    link[href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"]
+    link[href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"]
     script[src="https://code.jquery.com/jquery-2.1.4.js"]
     script[src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"]
     script[src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"]
@@ -114,7 +114,7 @@ html[ng-app="blinkr"]
                     | {{page_error.code}} {{page_error.message}}
                   div
                     ' {{page_error.title}}
-                    a[href="{{page_error.title}}" target="_blank" ng-if="page_error.title.startsWith('http')"]
+                    a[href="{{page_error.title}}" target="_blank" ng-if="page_error.title.startsWith('https')"]
                       i.fa.fa-external-link
                   pre
                     | {{page_error.snippet}}

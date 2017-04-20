@@ -9,7 +9,7 @@ module Blinkr
     end
 
     def set(request, response)
-      if request.is_a? String # HACK for caching resource and js errors
+      if request.is_a? String # HACK: for caching resource and js errors
         @memory[request] = response
       else
         @memory[request] = response unless response.timed_out?
@@ -21,4 +21,3 @@ module Blinkr
     end
   end
 end
-
