@@ -3,6 +3,8 @@ require 'rake/testtask'
 
 GEMFILE = "blinkr-#{Blinkr::VERSION}.gem".freeze
 
+task build: %I[test build_task]
+
 desc 'Run all unit-tests'
 task :test do |args|
   Rake::Task[:unit_test_task].invoke(args)
@@ -16,7 +18,7 @@ Rake::TestTask.new do |t|
 end
 
 desc 'Build the gem'
-task :build do
+task :build_task do
   system 'gem build blinkr.gemspec'
 end
 
