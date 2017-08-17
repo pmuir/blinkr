@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="http://www.example.com" target="_blank">
+    <title>Blinkr Home</title>
+    <script type="text/javascript">
+        function removeElement(node) {
+            node.parentNode.removeChild(node);
+        }
+
+        function load() {
+            slow_link = document.createElement("a");
+            some_text = document.createTextNode("Internal slow link");
+            slow_link.setAttribute('href', 'http://www.example.com/internal-link-6');
+            slow_link.setAttribute('class', 'slow');
+            slow_link.appendChild(some_text);
+            dumping_ground = document.getElementById('dumping_ground');
+            //wait for 0.5 second and then add the links
+            var t1 = setTimeout("dumping_ground.appendChild(slow_link);", 500);
+            var t2 = setTimeout("document.getElementById('will_become_visible').style.display='block';", 500);
+            var t3 = setTimeout("document.getElementById('will_become_invisible').style.display='none';", 500);
+        }
+        window.onload = load;
+    </script>
+</head>
+<body>
+<h1>Blinkr</h1>
+<span class='welcome'>A broken page and link checker for websites. Optionally uses phantomjs to render pages to check resource loading, links created by JS, and report any JS page load errors.</span>
+<table>
+    <tr>
+        <td><a href='http://www.example.com/internal-link-1'>Link One</a></td>
+        <td><a href='http://www.example.com/internal-link-2'>Link Two</a></td>
+        <td><a href='http://www.example.com/internal-link-3'>Link Three</a></td>
+        <td><a href='http://www.example.com/internal-link-4'>Link Four</a></td>
+        <td><a href='http://www.example.com/internal-link-5'>Link Five</a></td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <td><a href="http://www.externalhost.com/external-link-1">External Link One</a></td>
+        <td><a href="http://www.externalhost.com/external-link-2">External Link Two</a></td>
+        <td><a href="http://www.externalhost.com/external-link-3">External Link Three</a></td>
+        <td><a href="http://www.externalhost.com/external-link-4">External Link Four</a></td>
+        <td><a href="http://www.externalhost.com/external-link-5">External Link Five</a></td>
+    </tr>
+</table>
+
+<div id='container_with_element'>
+    <div class='embedded_element'>
+    </div>
+</div>
+
+<p id='dumping_ground'>
+
+</p>
+
+</body>
+</html>

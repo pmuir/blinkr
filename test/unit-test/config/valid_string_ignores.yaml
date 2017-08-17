@@ -1,0 +1,5 @@
+ignores:
+  - url: http://www.example.com/foo
+    message: Not Found
+    code: 404
+    snippet: <a href='/foo/'>I'm a link</a>

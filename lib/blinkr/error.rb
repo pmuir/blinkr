@@ -1,12 +1,11 @@
 module Blinkr
-  SEVERITY = [:success, :info, :warning, :danger]
+  SEVERITY = %I[success info warning danger].freeze
   class Error
     attr_reader :severity, :category, :type, :title, :message, :snippet, :icon, :code, :detail, :url
 
-    def initialize (opts = {})
+    def initialize(opts = {})
       raise TypeError 'severity must be a string or symbol' unless opts[:severity].is_a?(String) || opts[:severity].is_a?(Symbol)
       raise 'severity not a recognized value' unless SEVERITY.include? opts[:severity].to_sym
-
       @severity = opts[:severity].to_sym
       @category = opts[:category]
       @type = opts[:type]

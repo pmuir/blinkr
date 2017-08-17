@@ -3,24 +3,24 @@ require 'blinkr/engine'
 require 'blinkr/report'
 require 'blinkr/config'
 require 'blinkr/error'
+require 'blinkr/hacks'
 require 'blinkr/typhoeus_wrapper'
 require 'yaml'
 
 module Blinkr
-  def self.run(base_url, config = 'blinkr.yaml', single, verbose, vverbose)
-    args = {:base_url => base_url, :verbose => verbose, :vverbose => vverbose}
-    if !config.nil? && File.exists?(config)
-      config = Blinkr::Config.read config, args
-    else
-      config = Blinkr::Config.new args
-    end
-    
-    if single.nil?
+  module_function
+
+  def self.run(options = {})
+    config = if options[:config_file] && File.exist?(options[:config_file])
+               Blinkr::Config.read(options[:config_file], options.tap { |hs| hs.delete(:config_file) })
+             else
+               Blinkr::Config.new(options)
+             end
+
+    if options[:single_url].nil?
       Blinkr::Engine.new(config).run
     else
-      Blinkr::TyphoeusWrapper.new(config, OpenStruct.new).debug(single)
+      Blinkr::TyphoeusWrapper.new(config, OpenStruct.new).debug(options[:single_url])
     end
   end
-
 end
-

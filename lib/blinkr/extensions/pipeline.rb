@@ -1,4 +1,4 @@
-Dir[ File.join( File.dirname(__FILE__), '*.rb' ) ].each do |f|
+Dir[File.join(File.dirname(__FILE__), '*.rb')].each do |f|
   begin
     require f
   rescue LoadError => e
@@ -11,7 +11,6 @@ end
 module Blinkr
   module Extensions
     class Pipeline
-
       attr_reader :extensions
 
       def initialize(&block)
@@ -19,21 +18,17 @@ module Blinkr
         @block = block
       end
 
-      def load config
-        begin
-          instance_exec config, &@block if @block && @block.arity == 1
-          instance_exec &@block if @block && @block.arity == 0
-          self
-        rescue Exception => e
-          abort("Failed to initialize pipeline: #{e}")
-        end
+      def load(config)
+        instance_exec(config, &@block) if @block && @block.arity == 1
+        instance_exec(&@block) if @block && @block.arity.zero?
+        self
+      rescue StandardError => e
+        abort("Failed to initialize pipeline: #{e}")
       end
 
       def extension(ext)
         @extensions << ext
       end
-
     end
   end
 end
-
