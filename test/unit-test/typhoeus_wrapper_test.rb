@@ -4,7 +4,7 @@ require 'mocha/mini_test'
 
 class TestTyphoeusWrapper < Minitest::Test
 
-  describe Blinkr do
+  describe TestTyphoeusWrapper do
 
     it 'should initialize without error' do
       config = OpenStruct.new
